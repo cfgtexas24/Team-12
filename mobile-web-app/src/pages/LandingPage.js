@@ -5,7 +5,7 @@ import EmergencyButton from '../components/EmergencyButton';
 
 const LandingPage = () => {
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
       <EmergencyButton />
       <Typography variant="h2" component="h1" gutterBottom>
         Welcome to Support App
