@@ -5,7 +5,7 @@ const Points = require('../Models/points');
 
 const addPoint = async (req, res) => {
     try {
-      const { username } = req.body;
+      const { username } = req.query;
   
       // Create a filter for the document to update
       const filter = { username: username }; // Use the username from the request body
@@ -18,12 +18,13 @@ const addPoint = async (req, res) => {
       };
   
       // Update a single document
-      const result = await collection.updateOne(filter, updateDoc);
+      const result = await Points.updateOne(filter, updateDoc);
   
       // Check if a document was modified
       if (result.modifiedCount === 1) {
         res.status(200).json({ message: 'Points added successfully' }); // Changed to 200 for success
       } else {
+        console.log("Not incremented sucessfully")
         res.status(404).json({ message: 'User not found or points not updated' });
       }
     } catch (error) {

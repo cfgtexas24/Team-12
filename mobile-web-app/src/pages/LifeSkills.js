@@ -9,6 +9,7 @@ import { Typography } from '@mui/material';
 export default function LifeSkills() {
   const [lessonPlan, setLessonPlan] = useState('Cooking');
   const [points, setPoints] = useState(0);
+  const [mount, setMount] = useState(0);
 
   // Fetch points when the component mounts or when lessonPlan changes
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function LifeSkills() {
         console.log(data.points)
         console.log(lessonPlan)
         setPoints(data.points[lessonPlan]); // Assuming your API returns a 'points' field
+        
         //console.log(points)
       } catch (error) {
         console.error('Failed to fetch points:', error);
@@ -29,7 +31,7 @@ export default function LifeSkills() {
     }
 
     fetchPoints();
-  }, [lessonPlan]); // The useEffect runs when lessonPlan changes
+  }, [lessonPlan, mount]); // The useEffect runs when lessonPlan changes
 
   function handleDropdownChange(event) {
     setLessonPlan(event.target.value);
@@ -70,7 +72,13 @@ export default function LifeSkills() {
       {lessonPlan === 'Cooking' && (
         <div className="timeline">
           {cookingList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
