@@ -2,12 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Typography, Container } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
-import Apply from '../pages/Apply';
+import MentorApply from './MentorApply';
+import MenteeApply from './MenteeApply';
 
 const LandingPage = () => {
   return (
     <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
       <EmergencyButton />
+      <MentorApply />
+      <MenteeApply />
       <Typography variant="h2" component="h1" gutterBottom>
         Welcome to Support App
       </Typography>

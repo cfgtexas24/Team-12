@@ -9,7 +9,8 @@ import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
-import Apply from './pages/Apply'
+import MentorApply from './pages/MentorApply'
+import MenteeApply from './pages/MenteeApply'
 import './styles/App.css';
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
           <Route path="/lifeskills" element={<LifeSkills />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/apply" element={<Apply />} />
+          <Route path="/mentorapply" element={<MentorApply />} />
+          <Route path="/menteeapply" element={<MenteeApply />} />
         </Routes>
         <Navbar />
       </div>

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Container, Box, Grid } from '@mui/material';
 
-const Apply = () => {
+const MentorApply = () => {
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     occupation: '',
     experience: 0,
-    availability: '',
     reason: '',
     preferredMenteeAttributes: '',
     file: null,
@@ -66,6 +67,26 @@ const Apply = () => {
 
       <Box component="form" onSubmit={handleSubmit}>
         <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+          </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               required
@@ -192,4 +213,4 @@ const Apply = () => {
   );
 };
 
-export default Apply;
+export default MentorApply;
