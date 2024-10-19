@@ -22,6 +22,8 @@ const Calendar = ({ userRole }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState({});
   const [openEventDialog, setOpenEventDialog] = useState(false);
+  const [openEventDetailsDialog, setOpenEventDetailsDialog] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', time: '' });
 
   const isAdminOrMentor = userRole === 'admin' || userRole === 'mentor';
@@ -30,18 +32,18 @@ const Calendar = ({ userRole }) => {
   useEffect(() => {
     const sampleEvents = {
       '2024-10-20': [
-        { title: 'Team Meeting', time: '10:00', color: '#4285F4' },
-        { title: 'Lunch with Sarah', time: '12:30', color: '#0F9D58' }
+        { title: 'Team Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
+        { title: 'Lunch with Sarah', time: '12:30 PM', color: '#0F9D58', description: 'At the new Italian restaurant' }
       ],
       '2024-10-21': [
-        { title: 'Project Deadline', time: '09:00', color: '#DB4437' }
+        { title: 'Project Deadline', time: '09:00 AM', color: '#DB4437', description: 'Submit final report' }
       ],
       '2024-10-23': [
-        { title: 'Yoga Class', time: '18:00', color: '#F4B400' }
+        { title: 'Yoga Class', time: '06:00 PM', color: '#F4B400', description: 'Remember to bring your mat' }
       ],
       '2024-10-25': [
-        { title: 'Dentist Appointment', time: '14:00', color: '#4285F4' },
-        { title: 'Movie Night', time: '20:00', color: '#0F9D58' }
+        { title: 'Dentist Appointment', time: '02:00 PM', color: '#4285F4', description: 'Annual check-up' },
+        { title: 'Movie Night', time: '08:00 PM', color: '#0F9D58', description: 'Watch the new superhero movie' }
       ]
     };
     setEvents(sampleEvents);
@@ -85,11 +87,42 @@ const Calendar = ({ userRole }) => {
   const handleSaveEvent = () => {
     const eventDate = new Date(newEvent.date);
     const eventKey = `${eventDate.getFullYear()}-${eventDate.getMonth() + 1}-${eventDate.getDate()}`;
+    const formattedTime = formatTime(newEvent.time);
     setEvents(prevEvents => ({
       ...prevEvents,
-      [eventKey]: [...(prevEvents[eventKey] || []), { ...newEvent, color: '#4285F4' }]
+      [eventKey]: [...(prevEvents[eventKey] || []), { ...newEvent, time: formattedTime, color: '#4285F4' }]
     }));
     handleCloseEventDialog();
+  };
+
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setOpenEventDetailsDialog(true);
+  };
+
+  const handleCloseEventDetailsDialog = () => {
+    setOpenEventDetailsDialog(false);
+    setSelectedEvent(null);
+  };
+
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const parseTime = (timeString) => {
+    const [time, period] = timeString.split(' ');
+    let [hours, minutes] = time.split(':');
+    hours = parseInt(hours);
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    return { hours, minutes };
   };
 
   const renderWeekView = () => {
@@ -97,10 +130,10 @@ const Calendar = ({ userRole }) => {
 
     return (
       <Box sx={{ display: 'flex', height: 'calc(100vh - 150px)', overflowY: 'auto' }}>
-        <Box sx={{ width: '50px', flexShrink: 0 }}>
+        <Box sx={{ width: '80px', flexShrink: 0 }}>
           {hours.map(hour => (
             <Box key={hour} sx={{ height: '60px', borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography variant="caption">{`${hour}:00`}</Typography>
+              <Typography variant="caption">{formatTime(`${hour}:00`)}</Typography>
             </Box>
           ))}
         </Box>
@@ -114,10 +147,14 @@ const Calendar = ({ userRole }) => {
                 {hours.map(hour => (
                   <Box key={hour} sx={{ height: '60px', borderBottom: '1px solid #e0e0e0', position: 'relative' }}>
                     {dayEvents
-                      .filter(event => parseInt(event.time.split(':')[0]) === hour)
+                      .filter(event => {
+                        const { hours: eventHour } = parseTime(event.time);
+                        return eventHour === hour;
+                      })
                       .map((event, eventIndex) => (
                         <Paper
                           key={eventIndex}
+                          onClick={() => handleEventClick(event)}
                           sx={{
                             position: 'absolute',
                             top: '0',
@@ -234,6 +271,17 @@ const Calendar = ({ userRole }) => {
         <DialogActions>
           <Button onClick={handleCloseEventDialog} sx={{ color: '#8e44ad' }}>Cancel</Button>
           <Button onClick={handleSaveEvent} sx={{ backgroundColor: '#f1c40f', color: '#000' }}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openEventDetailsDialog} onClose={handleCloseEventDetailsDialog}>
+        <DialogTitle>{selectedEvent?.title}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">Time: {selectedEvent?.time}</Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>Description: {selectedEvent?.description}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEventDetailsDialog} sx={{ color: '#8e44ad' }}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
