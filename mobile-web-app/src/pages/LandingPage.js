@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Typography, Container } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
+import Apply from '../pages/Apply';
 
 const LandingPage = () => {
   return (

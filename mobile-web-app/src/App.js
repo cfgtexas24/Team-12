@@ -9,6 +9,7 @@ import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
+import Apply from './pages/Apply'
 import './styles/App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/lifeskills" element={<LifeSkills />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/apply" element={<Apply />} />
         </Routes>
         <Navbar />
       </div>
