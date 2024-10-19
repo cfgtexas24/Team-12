@@ -46,34 +46,66 @@ const Logon = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
-      <h2>Log in</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '10px' }}>
-          <label>Username:</label>
+    <div style={{ 
+      maxWidth: '800px', 
+      margin: '50px auto', // Center the form and push it down
+      padding: '20px', 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center' // Center items within the container
+    }}>
+      <h2 style={{ fontSize: '26px' }}>Log in</h2>
+      <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <div style={{ marginBottom: '20px', width: '100%' }}>
+          <label style={{ fontSize: '26px' }}>Username:</label>
           <input
             type="text"
             name="username"
             value={formData.username}
             onChange={handleChange}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            style={{ 
+              width: '100%', // Full width
+              padding: '12px', 
+              fontSize: '18px', // Increased font size
+              marginTop: '5px' 
+            }}
           />
         </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label>Password:</label>
+        <div style={{ marginBottom: '20px', width: '100%' }}>
+          <label style={{ fontSize: '26px' }}>Password:</label>
           <input
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             required
-            style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+            style={{ 
+              width: '100%', // Full width
+              padding: '12px', 
+              fontSize: '18px', // Increased font size
+              marginTop: '5px' 
+            }}
           />
         </div>
-        <button type="submit" style={{ padding: '10px', width: '100%' }}>
+        <button type="submit" style={{ padding: '12px', width: '100%', fontSize: '18px' }}>
           Log In
         </button>
+        
+        {/* Forgot Password Link */}
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <a 
+            href="/forgotpassword" 
+            style={{ 
+              fontSize: '16px', 
+              color: 'blue', 
+              textDecoration: 'none', 
+              cursor: 'pointer' 
+            }}
+          >
+            Forgot password?
+          </a>
+        </div>
       </form>
     </div>
   );
