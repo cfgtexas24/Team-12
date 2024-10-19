@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import '../styles/App.css'
-import { redirect } from 'react-router-dom';
+import '../styles/App.css';
 
 const Logon = () => {
   const [formData, setFormData] = useState({
@@ -16,9 +15,30 @@ const Logon = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Login Submitted!');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Login Successful!');
+        // Handle successful login (e.g., redirect or save user data)
+      } else {
+        alert(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   return (
@@ -37,11 +57,11 @@ const Logon = () => {
           />
         </div>
         <div style={{ marginBottom: '10px' }}>
-          <label>Logon Code:</label>
+          <label>Password:</label>
           <input
-            type="email"
-            name="email"
-            value={formData.email}
+            type="password"
+            name="password"
+            value={formData.password}
             onChange={handleChange}
             required
             style={{ width: '100%', padding: '8px', marginTop: '5px' }}

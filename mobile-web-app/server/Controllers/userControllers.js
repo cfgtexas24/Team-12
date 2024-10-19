@@ -1,4 +1,3 @@
-// controllers/userControllers.js
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -45,6 +44,36 @@ const signup = async (req, res) => {
   }
 };
 
+// Login function
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validate input
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid username or password' });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid username or password' });
+    }
+
+    res.status(200).json({ message: 'Login successful', user_id: user.user_id });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Failed to login', details: error.message });
+  }
+};
+
 module.exports = {
   signup,
+  login,
 };
