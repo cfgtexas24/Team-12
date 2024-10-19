@@ -1,49 +1,54 @@
 // Models/User.js
 const mongoose = require('mongoose');
 const { ClientType } = require('./ClientType');
+const { UserRole } = require('./UserRole');
 const { userSchema } = require('./User')
 const extendSchema = require('mongoose-extend-schema');
 
 const clientSchema = extendSchema(userSchema, {
+    user_role: {
+      type: String,
+      default: UserRole.CLIENT
+    },
+
     client_type: {
         type: Number,
-        required: true,
-        enum: [ClientType.MENTOR, ClientType.MENTEE],
+        default: ClientType.MENTEE
       },
 
-      email: {
-        type: String,
-        required: true
-      },
+    email: {
+      type: String,
+      required: true
+    },
 
-      password: {
-        type: String,
-        required: true,
-      },
+    password: {
+      type: String,
+      required: true,
+    },
 
-      preferred_attributes: {
-        type: String,
-        required: true
+    preferred_attributes: {
+      type: String,
+      default: null
     },
 
     phone_number: {
         type: String,
-        required: true
+        default: null
     },
 
     occupation: {
         type: String, 
-        required: true
+        default: null
     },
 
     years_of_experience: {
         type: Number,
-        required: true
+        default: null
     },
 
     reason_for_application: {
         type: String,
-        required: true
+        default: null
     },
 });
 
