@@ -1,74 +1,74 @@
-export const sculptureList = [{
-    name: 'Homenaje a la Neurocirugía',
-    artist: 'Marta Colvin Andrade',
-    description: 'Although Colvin is predominantly known for abstract themes that allude to pre-Hispanic symbols, this gigantic sculpture, an homage to neurosurgery, is one of her most recognizable public art pieces.',
-    url: 'https://i.imgur.com/Mx7dA2Y.jpg',
-    alt: 'A bronze statue of two crossed hands delicately holding a human brain in their fingertips.'  
-  }, {
-    name: 'Floralis Genérica',
-    artist: 'Eduardo Catalano',
-    description: 'This enormous (75 ft. or 23m) silver flower is located in Buenos Aires. It is designed to move, closing its petals in the evening or when strong winds blow and opening them in the morning.',
-    url: 'https://i.imgur.com/ZF6s192m.jpg',
-    alt: 'A gigantic metallic flower sculpture with reflective mirror-like petals and strong stamens.'
-  }, {
-    name: 'Eternal Presence',
-    artist: 'John Woodrow Wilson',
-    description: 'Wilson was known for his preoccupation with equality, social justice, as well as the essential and spiritual qualities of humankind. This massive (7ft. or 2,13m) bronze represents what he described as "a symbolic Black presence infused with a sense of universal humanity."',
-    url: 'https://i.imgur.com/aTtVpES.jpg',
-    alt: 'The sculpture depicting a human head seems ever-present and solemn. It radiates calm and serenity.'
-  }, {
-    name: 'Moai',
-    artist: 'Unknown Artist',
-    description: 'Located on the Easter Island, there are 1,000 moai, or extant monumental statues, created by the early Rapa Nui people, which some believe represented deified ancestors.',
-    url: 'https://i.imgur.com/RCwLEoQm.jpg',
-    alt: 'Three monumental stone busts with the heads that are disproportionately large with somber faces.'
-  }, {
-    name: 'Blue Nana',
-    artist: 'Niki de Saint Phalle',
-    description: 'The Nanas are triumphant creatures, symbols of femininity and maternity. Initially, Saint Phalle used fabric and found objects for the Nanas, and later on introduced polyester to achieve a more vibrant effect.',
-    url: 'https://i.imgur.com/Sd1AgUOm.jpg',
-    alt: 'A large mosaic sculpture of a whimsical dancing female figure in a colorful costume emanating joy.'
-  }, {
-    name: 'Ultimate Form',
-    artist: 'Barbara Hepworth',
-    description: 'This abstract bronze sculpture is a part of The Family of Man series located at Yorkshire Sculpture Park. Hepworth chose not to create literal representations of the world but developed abstract forms inspired by people and landscapes.',
-    url: 'https://i.imgur.com/2heNQDcm.jpg',
-    alt: 'A tall sculpture made of three elements stacked on each other reminding of a human figure.'
-  }, {
-    name: 'Cavaliere',
-    artist: 'Lamidi Olonade Fakeye',
-    description: "Descended from four generations of woodcarvers, Fakeye's work blended traditional and contemporary Yoruba themes.",
-    url: 'https://i.imgur.com/wIdGuZwm.png',
-    alt: 'An intricate wood sculpture of a warrior with a focused face on a horse adorned with patterns.'
-  }, {
-    name: 'Big Bellies',
-    artist: 'Alina Szapocznikow',
-    description: "Szapocznikow is known for her sculptures of the fragmented body as a metaphor for the fragility and impermanence of youth and beauty. This sculpture depicts two very realistic large bellies stacked on top of each other, each around five feet (1,5m) tall.",
-    url: 'https://i.imgur.com/AlHTAdDm.jpg',
-    alt: 'The sculpture reminds a cascade of folds, quite different from bellies in classical sculptures.'
-  }, {
-    name: 'Terracotta Army',
-    artist: 'Unknown Artist',
-    description: 'The Terracotta Army is a collection of terracotta sculptures depicting the armies of Qin Shi Huang, the first Emperor of China. The army consisted of more than 8,000 soldiers, 130 chariots with 520 horses, and 150 cavalry horses.',
-    url: 'https://i.imgur.com/HMFmH6m.jpg',
-    alt: '12 terracotta sculptures of solemn warriors, each with a unique facial expression and armor.'
-  }, {
-    name: 'Lunar Landscape',
-    artist: 'Louise Nevelson',
-    description: 'Nevelson was known for scavenging objects from New York City debris, which she would later assemble into monumental constructions. In this one, she used disparate parts like a bedpost, juggling pin, and seat fragment, nailing and gluing them into boxes that reflect the influence of Cubism’s geometric abstraction of space and form.',
-    url: 'https://i.imgur.com/rN7hY6om.jpg',
-    alt: 'A black matte sculpture where the individual elements are initially indistinguishable.'
-  }, {
-    name: 'Aureole',
-    artist: 'Ranjani Shettar',
-    description: 'Shettar merges the traditional and the modern, the natural and the industrial. Her art focuses on the relationship between man and nature. Her work was described as compelling both abstractly and figuratively, gravity defying, and a "fine synthesis of unlikely materials."',
-    url: 'https://i.imgur.com/okTpbHhm.jpg',
-    alt: 'A pale wire-like sculpture mounted on concrete wall and descending on the floor. It appears light.'
-  }, {
-    name: 'Hippos',
-    artist: 'Taipei Zoo',
-    description: 'The Taipei Zoo commissioned a Hippo Square featuring submerged hippos at play.',
-    url: 'https://i.imgur.com/6o5Vuyu.jpg',
-    alt: 'A group of bronze hippo sculptures emerging from the sett sidewalk as if they were swimming.'
-  }];
-  
+export const lessonList = [
+  {
+    title: '10 Essential Cooking Skills That Every Cook Should Know',
+    author: 'The Spruce Eats',
+    description: '',
+    type: 'website',
+    url: 'https://www.thespruceeats.com/essential-cooking-skills-to-know-6743595',
+    text: `Much like balancing your budget or keeping houseplants alive, cooking is a skill that requires both knowledge and practice. And while it might be a joy to attend cooking school, who’s got the time? We did the work and boiled the world of cooking down to 10 basic skills that will make your meals so much easier (and delicious!). Whether you’re a beginner or a pro, bone up on these 10 essential cooking skills.
+    1. Master the Art of Boiling
+We know, boiling seems beyond basic; What could be more essential than filling a pot, putting it on high, and letting the water rip? Boiling water—and lower-temperature techniques like steaming and poaching—opens up tons of delicious meal options. When you learn to harness the power of boiling you can make delicious weeknight pasta dishes, make basic stocks and broths, poach eggs for brunch and fish for dinner parties. You can meal-prep basics like hard cooked eggs or steam simple vegetables like broccoli and sweet potatoes for the weeknight side. And how can we forget soup? Boiling is essential to soothing, budget-friendly pots of soup and beans. 
+
+Here’s what you need to know about boiling: For cooking, there are three types of boils: rolling, slow, or simmer. A rolling boil is the classic 212 F pot of rumbling, vivacious bubbles. A rolling boil is most often used for cooking pasta and hard-cooking eggs. Pro tip: Water will come to a boil faster without salt, so salt your pasta pot after it is actively boiling. A slow boil is approximately 205 F and most often used for making broth and stock. A simmer ranges from 205 to 190 F. You’ll want to know how to simmer for cooking dried beans as well as creating rich, meaty braises.
+2. How To Cut an Onion the Right Way
+Basic knife skills are essential to faster, easier cooking because when your onions (or carrots or chicken cutlets) are all about the same size they cook more evenly. An onion is almost always used as the example of proper knife skills because it is also the most basic aromatic for everything from everyday chili to holiday roasts. But the fundamentals of cutting an onion apply to other produce as well: Remove the stem and peel, cut into manageable pieces with a flat steady side and then cut it into smaller pieces methodically. 
+
+Here’s what you need to know about cutting an onion the right way: Cut basic white, yellow, and red onions like this: Trim off the top of the onion—leave the root in place to make cutting easier. Remove the peel. Halve the onion lengthwise. Then, working with one half at a time, position the onion cut side down with the cut top parallel to the knife. With your knife parallel to the cutting board, make ¼ inch slices of the onion working from the bottom to the top, making wide planks of onion, and stopping before you hit the root. Then hold your knife as you normally would and start cutting downward perpendicular to the cut top. Finally, turn the onion 90 degrees and slice through all those slices to get a finely chopped onion.`
+  },
+  {
+    title: 'Chicken Quesadilla',
+    author: 'Marta Colvin Andrade',
+    description: 'A recipe for a healthy chicken quesadilla using corn and zucchini.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/bDQ2MUERJAg?si=Mh_kv63JOWTgA-ZD'
+  },
+  {
+    title: 'How to Make Perfect Hard Boiled Eggs',
+    author: 'Tasty',
+    description: 'Learn how to make hard-boiled eggs perfectly every time.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/FTha4zARGN4?si=_kRxWxnGEzPaipP7'
+  },
+  {
+    title: 'The Perfect Grilled Cheese Sandwich',
+    author: 'Epicurious',
+    description: 'Master the art of making the perfect grilled cheese sandwich.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF'
+  },
+  {
+    title: 'How to Make Homemade Pasta',
+    author: 'Gordon Ramsay',
+    description: 'Learn the secrets to making pasta from scratch.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/UQvWAGGwi84'
+  },
+  {
+    title: '10 Cooking Hacks You Wish You Knew Sooner',
+    author: 'BuzzFeed Nifty',
+    description: 'Quick cooking hacks to make your life easier in the kitchen.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/UNN4-vrscp0'
+  },
+  {
+    title: 'How to Make French Toast',
+    author: 'Food Wishes',
+    description: 'A simple and delicious recipe for French toast.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/3FgiT3v2XwY'
+  },
+  {
+    title: 'Chocolate Chip Cookies - Easy Recipe',
+    author: 'Tasty',
+    description: 'An easy recipe to make classic chocolate chip cookies.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/93wAdgb1D68'
+  },
+  {
+    title: 'How to Cook Rice',
+    author: 'Cooking with Dog',
+    description: 'A simple guide to cooking rice perfectly.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/rLw1u0f7wok'
+  }
+];
