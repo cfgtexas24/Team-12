@@ -1,5 +1,5 @@
+// Models/User.js
 const mongoose = require('mongoose');
-const UserType = require('./UserType');
 
 const userSchema = new mongoose.Schema({
   user_id: {
@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   user_type: {
     type: Number,
     required: true,
-    enum: Object.values(UserType),
+    enum: [0, 1, 2], // Admin, Mentor, Mentee
   },
   name: {
     type: String,
@@ -26,7 +26,6 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
 });
-
 
 const User = mongoose.model('User', userSchema);
 
