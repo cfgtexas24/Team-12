@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const Client = require('../Models/Client');
 const { ClientType } = require('../Models/ClientType');
+const crypto = require('crypto');
 
 // Signup function
 
@@ -20,6 +21,9 @@ const { ClientType } = require('../Models/ClientType');
 //   "reason_for_application": "I need money sir"
 
 // }
+
+
+const salt = "$2b$10$EixZaYVKm8U8fZ1Zb8uGu.";
 
 const signup = async (req, res) => {
   try {
@@ -43,7 +47,6 @@ const signup = async (req, res) => {
 
     // Generate unique user ID and hash the password
     const userId = uuidv4();
-    const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
 
@@ -65,7 +68,35 @@ const signup = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body; // Corrected: removed await
 
+    // Find the user by username
+    const current_user = await Client.findOne({ username });
+    
+    // Check if the user exists
+    if (!current_user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Compare the provided password with the stored hashed password
+    const isMatch = await bcrypt.compare(password, current_user.password);
+    
+    if (isMatch) {
+      // Set cookies on successful login (adjust options as needed)
+      res.cookie('user_id', current_user._id.toString(), { httpOnly: true, secure: true }); // Store user ID in a cookie
+      res.cookie('client_type', current_user.client_type, { httpOnly: true, secure: true }); // Store client type if needed
+
+      return res.status(200).json({ message: 'Logged in successfully' });
+    } else {
+      return res.status(400).json({ message: 'Incorrect password' });
+    }
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    return res.status(500).json({ message: 'Invalid request' });
+  }
+};
 
 const getusers = async (req, res) => {
   try {
@@ -95,5 +126,6 @@ const getuser = async (req, res) => {
 module.exports = {
   signup,
   getusers,
-  getuser
+  getuser,
+  login
 };

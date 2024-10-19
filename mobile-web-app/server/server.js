@@ -5,7 +5,7 @@ const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 require('dotenv').config();
-const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -18,13 +18,7 @@ app.use(cors({
 }));
 
 // Initialize session middleware
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
+app.use(cookieParser());
 app.use(express.json());
 
 // MongoDB connection
