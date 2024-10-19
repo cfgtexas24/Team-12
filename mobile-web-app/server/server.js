@@ -3,7 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 require('dotenv').config();
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -14,6 +16,15 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Initialize session middleware
+app.use(session({
+  secret: 'your-secret-key',   // Replace with your secret key
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }    // Set `secure: true` if using HTTPS
+}));
+
 app.use(express.json());
 
 // MongoDB connection
@@ -34,7 +45,8 @@ mongoose.connect(MONGODB_URI, {
 });
 
 
-app.use('/api', userRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/application', applicationRoutes)
 
 // Start server
 app.listen(PORT, () => {

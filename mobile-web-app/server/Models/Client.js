@@ -1,7 +1,7 @@
 // Models/User.js
 const mongoose = require('mongoose');
-const { ClientType } = require('../ClientType');
-const { userSchema } = require('../User')
+const { ClientType } = require('./ClientType');
+const { userSchema } = require('./User')
 const extendSchema = require('mongoose-extend-schema');
 
 const clientSchema = extendSchema(userSchema, {
