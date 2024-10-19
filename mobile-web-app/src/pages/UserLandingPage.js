@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EmergencyButton from '../components/EmergencyButton';
+import ApplicantTable from '../components/ApplicantTable';
+
+
+
 import logo from "../LOGO.png"
 import { 
   Container, 
