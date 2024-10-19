@@ -105,3 +105,8 @@
   :target {
     scroll-margin-block: 5ex;
   }
+
+  .header {
+    color: (--color-primary);
+    
+  }
