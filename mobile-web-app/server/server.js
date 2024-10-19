@@ -1,22 +1,16 @@
-require('dotenv').config(); // Load environment variables from .env
-const cors = require('cors');
-app.use(cors());
-
-// Import necessary modules
 const express = require('express');
 const mongoose = require('mongoose');
-const twilio = require('twilio');
+const userRoutes = require('./routes/userRoutes'); 
+require('dotenv').config();
 
-// Initialize Express app
 const app = express();
-const PORT = 5001;
-const TWILIOPORT = 8081; 
+const PORT = process.env.PORT || 8000;
 
 // Middleware
-app.use(express.json()); // Allows us to parse incoming JSON requests
+app.use(express.json());
 
 // MongoDB connection
-const MONGO_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://team12:stormdb@cluster0.lcu1c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
@@ -25,42 +19,15 @@ mongoose.connect(MONGO_URI, {
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.error('MongoDB connection error:', err));
 
-// Twilio setup
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-// Log to ensure environment variables are loaded
-if (!accountSid || !authToken || !twilioPhoneNumber) {
-  console.error("Twilio credentials are missing. Please check the .env file.");
-  console.log('var1%s', accountSid); 
-  console.log('var2%s', authToken); 
-  console.log('var3%s', twilioPhoneNumber); 
-} else {
-  console.log("Twilio credentials loaded successfully.");
-}
-
-const client = new twilio(accountSid, authToken);
-
-// Route for testing Twilio setup
-app.get('/test-twilio', (req, res) => {
-  client.messages
-    .create({
-      body: 'Hello from Twilio, this is a test message.',
-      from: twilioPhoneNumber,
-      to: '+1234567890' // Replace with a valid phone number for testing
-    })
-    .then(message => {
-      console.log('SMS sent:', message.sid);
-      res.status(200).send('SMS sent successfully');
-    })
-    .catch(error => {
-      console.error('Error sending SMS:', error);
-      res.status(500).send('Error sending SMS');
-    });
+// Routes
+app.get('/', (req, res) => {
+  res.send('Hello from the server!');
 });
+
+app.use('/', userRoutes);
+
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`)
 });
