@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Select, MenuItem, InputLabel, FormControl, Container, Typography } from '@mui/material';
 import '../styles/App.css';
 import emailjs from '@emailjs/browser';
+import logo from '../LOGO.png';
 
 const EmergencyContact = () => {
   const [formData, setFormData] = useState({

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
+import EmergencyButton from '../components/EmergencyButton';
 import '../styles/App.css';
+import logo from "../LOGO.png"
 
 const Logon = () => {
   const [formData, setFormData] = useState({
@@ -46,6 +49,7 @@ const Logon = () => {
   };
 
   return (
+    
     <div style={{ 
       maxWidth: '800px', 
       margin: '50px auto', // Center the form and push it down
@@ -54,6 +58,16 @@ const Logon = () => {
       flexDirection: 'column',
       alignItems: 'center' // Center items within the container
     }}>
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
+      </Box>
+      {/* Emergency Button at the top */}
+      <EmergencyButton />
       <h2 style={{ fontSize: '26px' }}>Log in</h2>
       <form onSubmit={handleSubmit} style={{ width: '100%' }}>
         <div style={{ marginBottom: '20px', width: '100%' }}>
