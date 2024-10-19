@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, 
   Grid, 
@@ -20,7 +20,8 @@ import {
 
 const UserLandingPage = () => {
   const [mentorName, setMentorName] = useState("Sarah Johnson");
-  const [totalPoints, setTotalPoints] = useState(1250);
+  const [totalPoints, setTotalPoints] = useState(300);
+  const [displayedPoints, setDisplayedPoints] = useState(0); // For animation
   const [events, setEvents] = useState([
     { date: "2024-10-18", title: "Meeting with Mentor" },
     { date: "2024-10-20", title: "Community Volunteering" },
@@ -33,9 +34,29 @@ const UserLandingPage = () => {
   ]);
 
   const handleEditContacts = () => {
-    // Implement edit functionality here
     console.log("Edit contacts");
   };
+
+  // Animate the points value
+  useEffect(() => {
+    let start = 0;
+    const end = totalPoints;
+    if (start === end) return;
+
+    let incrementTime = 10; // in ms, change this to adjust speed
+    const step = Math.ceil(end / 100);
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayedPoints(start);
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [totalPoints]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -60,7 +81,7 @@ const UserLandingPage = () => {
               Your Mentor: {mentorName}
             </Typography>
             <Typography component="p" variant="h4">
-              Total Points: {totalPoints}
+              Total Points: {displayedPoints}
             </Typography>
           </Paper>
         </Grid>
