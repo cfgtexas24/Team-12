@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import '../styles/App.css';
 import emailjs from '@emailjs/browser';
 
@@ -11,6 +12,7 @@ const Register = () => {
   });
 
   const form = useRef(); // Reference for the form
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,9 +24,14 @@ const Register = () => {
 
   const sendEmail = (e) => {
     e.preventDefault();
-
+    console.log(process.env.REACT_APP_EMAILJS_SERVICE_ID);
     emailjs
-      .sendForm('service_qwldh6a', 'template_69dyt8s', form.current, 'R9l7MXFYm80zeutcc')
+      .sendForm(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID, 
+        form.current, 
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+      )
       .then(
         () => {
           console.log('SUCCESS!');
@@ -33,23 +40,53 @@ const Register = () => {
         (error) => {
           console.log('FAILED...', error.text);
           alert('Email sending failed...');
-        },
+        }
       );
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent the default form submission
+
+    console.log(formData.password); // Log the password for debugging
 
     // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
+        alert('Passwords do not match!');
+        return; // Exit if passwords do not match
     }
 
-    // Call sendEmail after form validation
-    sendEmail(e);
-    alert('Registration Submitted!');
-  };
+    // Prepare the data to be sent
+    const data = {
+        name: "TEST",
+        username: "TESTING", // Extract username
+        password: "TESTING",    // Extract password
+        user_type: 2
+    };
+
+    // TODO: FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx
+    // Make the POST request to the MongoDB endpoint
+    await fetch('http://localhost:8000/signup', {
+        method: 'POST', // Specify the request method
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(data) // Convert the data to a JSON string
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json(); // Parse the response as JSON
+    })
+    .then(data => {
+        console.log('Success:', data); // Handle the success response
+        alert('Signup successful!'); // Alert user on success
+    })
+    .catch((error) => {
+        console.error('Error:', error); // Handle any errors
+        alert('Signup failed. Please try again.'); // Alert user on failure
+    });
+};
 
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
