@@ -1,22 +1,9 @@
 import { useState } from 'react';
-import { lessonList } from '../data/cooking.js';
-import LessonDetails from '../components/LessonDetails.js';
+//import { lessonList } from '../data/cooking.js';
 
-export default function Gallery() {
+export default function LessonDetails({lesson}) {
   // const [index, setIndex] = useState(0);
   const [showMore, setShowMore] = useState(false);
-
-  // function handleNextClick() {
-  //   if (index < lessonList.length - 1) {
-  //     setIndex(index + 1);
-  //   }
-  // }
-
-  // function handleBackClick() {
-  //   if (index > 0) {
-  //     setIndex(index - 1);
-  //   }
-  // }
 
   function handleMoreClick() {
     setShowMore(!showMore);
@@ -53,9 +40,19 @@ export default function Gallery() {
     }
   }
 
-  const list = lessonList.map((lesson) => (
-   <LessonDetails lesson={lesson}/>
-  ));
+  return (
+    <div>
+    <h2>
+      <i>{lesson.title} </i> by {lesson.author}
+    </h2>
+    <p>{lesson.description}</p>
 
-  return <>{list}</>;
+    <button onClick={handleMoreClick}>
+      {showMore ? 'Hide' : 'Show'} details
+    </button>
+
+    {showMore && <ContentManager lesson={lesson} />}
+
+  </div>
+  )
 }

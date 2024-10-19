@@ -37,38 +37,17 @@ Here’s what you need to know about cutting an onion the right way: Cut basic w
     url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF'
   },
   {
-    title: 'How to Make Homemade Pasta',
-    author: 'Gordon Ramsay',
-    description: 'Learn the secrets to making pasta from scratch.',
+    title: 'How to boil pasta',
+    author: 'The Cooking Corner',
+    description: 'Perfect guide to getting your pasta just right.',
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/UQvWAGGwi84'
+    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z'
   },
   {
     title: '10 Cooking Hacks You Wish You Knew Sooner',
     author: 'BuzzFeed Nifty',
     description: 'Quick cooking hacks to make your life easier in the kitchen.',
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/UNN4-vrscp0'
-  },
-  {
-    title: 'How to Make French Toast',
-    author: 'Food Wishes',
-    description: 'A simple and delicious recipe for French toast.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/3FgiT3v2XwY'
-  },
-  {
-    title: 'Chocolate Chip Cookies - Easy Recipe',
-    author: 'Tasty',
-    description: 'An easy recipe to make classic chocolate chip cookies.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/93wAdgb1D68'
-  },
-  {
-    title: 'How to Cook Rice',
-    author: 'Cooking with Dog',
-    description: 'A simple guide to cooking rice perfectly.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/rLw1u0f7wok'
+    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5'
   }
 ];
