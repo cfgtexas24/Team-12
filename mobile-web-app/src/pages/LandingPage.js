@@ -16,7 +16,7 @@ const LandingPage = () => {
       <Button variant="contained" color="primary" component={Link} to="/signin">
         Sign In
       </Button>
-      <Button variant="outlined" color="primary" component={Link} to="/signup" sx={{ marginLeft: '10px' }}>
+      <Button variant="outlined" color="primary" component={Link} to="/register" sx={{ marginLeft: '10px' }}>
         Sign Up
       </Button>
     </Container>

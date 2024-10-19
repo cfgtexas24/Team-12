@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import '../styles/App.css'
+import { redirect } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -18,8 +20,8 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    console.log('Form data submitted:', formData);
+    alert('Login Submitted!');
+    
   };
 
   return (
