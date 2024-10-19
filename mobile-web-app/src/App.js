@@ -23,7 +23,7 @@ function App() {
     // Here you would typically send the message to a server
     // For now, we'll just simulate a response
     setTimeout(() => {
-      setChatMessages(prevMessages => [...prevMessages, { text: 'This is a response', sender: 'Bot' }]);
+      setChatMessages(prevMessages => [...prevMessages, { text: 'Hi! This is a representative at STORM. How can we help you today?', sender: 'STORM' }]);
     }, 1000);
   };
 
