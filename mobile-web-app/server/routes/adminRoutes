@@ -1,0 +1,11 @@
+// routes/userRoutes.js
+const express = require('express');
+const { signup } = require('../Controllers/adminControllers');
+const bcrypt = require('bcryptjs');
+
+const router = express.Router();
+
+// Route to handle user signup
+router.post('/create', signup);
+
+module.exports = router;
