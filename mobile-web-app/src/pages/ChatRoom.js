@@ -36,6 +36,8 @@ const ChatRoom = () => {
   const messagesEndRef = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const [peerConnection, setPeerConnection] = useState(null);
+  const [localStream, setLocalStream] = useState(null);
 
   // Mock data for mentors and friends
   const contacts = [
@@ -50,6 +52,63 @@ const ChatRoom = () => {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    if (isInVideoCall) {
+      initializeWebRTC();
+    } else {
+      cleanupWebRTC();
+    }
+  }, [isInVideoCall]);
+
+  const initializeWebRTC = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      const pc = new RTCPeerConnection();
+      setPeerConnection(pc);
+
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.ontrack = (event) => {
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          // Send the candidate to the remote peer
+          // You'll need to implement signaling here
+        }
+      };
+
+      // Create and send an offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // Send the offer to the remote peer
+      // You'll need to implement signaling here
+
+    } catch (error) {
+      console.error("Error initializing WebRTC:", error);
+    }
+  };
+
+  const cleanupWebRTC = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    if (peerConnection) {
+      peerConnection.close();
+    }
+    setLocalStream(null);
+    setPeerConnection(null);
+  };
 
   const handleSendMessage = () => {
     if (newMessage.trim() !== '' && selectedChannel) {
@@ -73,23 +132,11 @@ const ChatRoom = () => {
     setSelectedChannel('General');
   };
 
-  const startVideoCall = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-      setIsInVideoCall(true);
-      //  WebRTC connection
-    } catch (error) {
-      console.error("Error accessing media devices:", error);
-    }
+  const startVideoCall = () => {
+    setIsInVideoCall(true);
   };
 
   const endVideoCall = () => {
-    if (localVideoRef.current && localVideoRef.current.srcObject) {
-      localVideoRef.current.srcObject.getTracks().forEach(track => track.stop());
-    }
     setIsInVideoCall(false);
   };
 
@@ -132,9 +179,9 @@ const ChatRoom = () => {
   const renderChatRoom = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
       {isInVideoCall && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2, backgroundColor: '#000' }}>
-          <video ref={localVideoRef} autoPlay muted style={{ width: '40%', margin: '0 10px' }} />
-          <video ref={remoteVideoRef} autoPlay style={{ width: '40%', margin: '0 10px' }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, backgroundColor: '#000', height: '50%' }}>
+          <video ref={localVideoRef} autoPlay muted style={{ width: '48%', height: '100%', objectFit: 'cover' }} />
+          <video ref={remoteVideoRef} autoPlay style={{ width: '48%', height: '100%', objectFit: 'cover' }} />
         </Box>
       )}
       <Box sx={{ 
