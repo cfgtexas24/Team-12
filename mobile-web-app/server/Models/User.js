@@ -1,5 +1,6 @@
 // Models/User.js
 const mongoose = require('mongoose');
+const { ClientType } = require('./ClientType')
 
 const userSchema = new mongoose.Schema({
   user_id: {
@@ -7,12 +8,12 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  user_type: {
-    type: Number,
+
+  first_name: {
+    type: String,
     required: true,
-    enum: [0, 1, 2], // Admin, Mentor, Mentee
   },
-  name: {
+  last_name: {
     type: String,
     required: true,
   },
@@ -20,11 +21,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
+  }
 });
 
 const User = mongoose.model('User', userSchema);
