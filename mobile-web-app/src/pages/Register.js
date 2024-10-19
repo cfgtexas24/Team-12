@@ -32,19 +32,19 @@ const Register = () => {
     emailjs
     .sendForm(
       process.env.REACT_APP_EMAILJS_SERVICE_ID,
-      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+      process.env.REACT_APP_EMAILJS_REGISTRATION_ID,
       form.current,
       process.env.REACT_APP_EMAILJS_PUBLIC_KEY
     )
     .then(
         () => {
           console.log('SUCCESS!');
-          alert('Email sent successfully!');
-        },
-        (error) => {
-          console.log('FAILED...', error.text);
-          alert('Email sending failed...');
-        },
+          alert('Email sent successfully!');}
+        // },
+        // (error) => {
+        //   console.log('FAILED...', error.text);
+        //   alert('Email sending failed...');
+        // },
       );
   };
 
