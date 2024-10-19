@@ -131,7 +131,7 @@ const UserLandingPage = () => {
     if (selectedReward && totalPoints >= selectedReward.points) {
       setTotalPoints(totalPoints - selectedReward.points);
       // Here you would typically call an API to process the redemption
-      alert(`You have redeemed ${selectedReward.points} points for ${selectedReward.description}`);
+      alert(`You have redeemed ${selectedReward.points} points for ${selectedReward.description}. It has been sent to your email`);
       handleCloseRedeemPointsDialog();
     } else {
       alert("You don't have enough points for this reward.");

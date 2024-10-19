@@ -29,7 +29,12 @@ const PopupChat = ({ messages, onSendMessage }) => {
       <Fab
         color="primary"
         aria-label="chat"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 80, sm: 16 }, // Adjust for mobile and desktop
+          right: 16,
+          zIndex: 1000, // Ensure it's above other content
+        }}
         onClick={handleToggle}
       >
         <ChatIcon />
@@ -38,7 +43,13 @@ const PopupChat = ({ messages, onSendMessage }) => {
         anchor="right"
         open={isOpen}
         onClose={handleToggle}
-        PaperProps={{ sx: { width: '300px' } }}
+        PaperProps={{ 
+          sx: { 
+            width: { xs: '100%', sm: '300px' },
+            height: { xs: 'calc(100% - 56px)', sm: '100%' }, // Adjust height for mobile
+            bottom: { xs: 56, sm: 0 }, // Position above navbar on mobile
+          } 
+        }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
