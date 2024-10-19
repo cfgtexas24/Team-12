@@ -22,10 +22,14 @@ const Register = () => {
 
   const sendEmail = (e) => {
     e.preventDefault();
-
     emailjs
-      .sendForm('service_qwldh6a', 'template_69dyt8s', form.current, 'R9l7MXFYm80zeutcc')
-      .then(
+    .sendForm(
+      process.env.REACT_APP_EMAILJS_SERVICE_ID,
+      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+      form.current,
+      process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+    )
+    .then(
         () => {
           console.log('SUCCESS!');
           alert('Email sent successfully!');
