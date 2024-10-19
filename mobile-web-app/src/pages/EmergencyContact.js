@@ -40,15 +40,36 @@ const EmergencyContact = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!errors.phone) {
-      console.log(formData);
-      // Navigate to confirmation page
-      navigate('/confirmation');
+    if (
+      !errors.phone &&
+      formData.first_name &&
+      formData.last_name &&
+      formData.email &&
+      formData.phone &&
+      formData.message &&
+      formData.category
+      ) {
+      // Send form data to the backend
+      fetch('http://localhost:5001/send-emergency-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), // Send all form data to backend
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Success:', data);
+          navigate('/confirmation');
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
     } else {
       alert('Please fix the errors before submitting');
     }
   };
-
+  
   return (
     <Container
       maxWidth="sm"
