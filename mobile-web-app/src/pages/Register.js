@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
 import '../styles/App.css';
+import emailjs from '@emailjs/browser';
+import { useRef } from 'react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -15,12 +17,35 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  const form = useRef(); // Reference for the form
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+  };
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+    emailjs
+    .sendForm(
+      process.env.REACT_APP_EMAILJS_SERVICE_ID,
+      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+      form.current,
+      process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+    )
+    .then(
+        () => {
+          console.log('SUCCESS!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('FAILED...', error.text);
+          alert('Email sending failed...');
+        },
+      );
   };
 
   const handleSubmit = async (e) => {
@@ -31,6 +56,9 @@ const Register = () => {
       setError('Passwords do not match!');
       return;
     }
+     // Call sendEmail after form validation
+    sendEmail(e);
+    alert('Registration Submitted!');
 
     const data = {
       name: formData.username, // Using username as name for now
@@ -80,7 +108,7 @@ const Register = () => {
         <Typography component="h1" variant="h5">
           Register
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} ref={form} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
