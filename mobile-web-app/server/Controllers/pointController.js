@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
-const Points = require('../models/points');
+const Points = require('../Models/points');
 
 
 const addPoint = async (req, res) => {
@@ -36,8 +36,11 @@ const addPoint = async (req, res) => {
 // Add point function
 const pointLookup = async (req, res) => {
     try {
+      // console.log(req)
+      // console.log(req.query)
         // Destructure the points from the request body
-        const { username, cookingPoints, financePoints, stressPoints, careerPoints } = req.body;
+        const { username } = req.query;
+        console.log(username)
 
         // Ensure the username is provided
         if (!username) {
@@ -45,17 +48,12 @@ const pointLookup = async (req, res) => {
         }
 
         // Fetch the existing points for the user
-        const userPoints = await Points.findOne({ username });
+        const userPoints = await Points.findOne({ "username": username });
+        console.log(userPoints)
         
         if (!userPoints) {
             return res.status(404).json({ message: "User not found." });
         }
-
-        // Update points
-        userPoints.cookingPoints += cookingPoints || 0; // Add points or default to 0
-        userPoints.financePoints += financePoints || 0;
-        userPoints.stressPoints += stressPoints || 0;
-        userPoints.careerPoints += careerPoints || 0;
 
         // Calculate the total points
         const total = userPoints.cookingPoints + userPoints.financePoints + userPoints.stressPoints + userPoints.careerPoints;
@@ -65,13 +63,13 @@ const pointLookup = async (req, res) => {
 
         // Return the updated points and total
         return res.status(200).json({
-            message: "Points updated successfully.",
+            message: "Points retrieved successfully.",
             points: {
-                cookingPoints: userPoints.cookingPoints,
-                financePoints: userPoints.financePoints,
-                stressPoints: userPoints.stressPoints,
-                careerPoints: userPoints.careerPoints,
-                totalPoints: total
+                Cooking: userPoints.cookingPoints,
+                FinancialLiteracy: userPoints.financePoints,
+                StressManagement: userPoints.stressPoints,
+                CareerReadiness: userPoints.careerPoints,
+                total: total
             }
         });
 
@@ -83,6 +81,6 @@ const pointLookup = async (req, res) => {
 
 
 module.exports = {
-  signup,
-  login,
+  addPoint,
+  pointLookup,
 };

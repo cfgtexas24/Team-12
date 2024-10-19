@@ -6,23 +6,23 @@ const pointsSchema = new mongoose.Schema({
     required: true,
   },
   cookingPoints: {
-    type: int,
+    type: Number,
     required: true,
   },
   financePoints: {
-    type: int,
+    type: Number,
     required: true,
   },
   stressPoints: {
-    type: int,
+    type: Number,
     required: true,
   },
   careerPoints: {
-    type: int,
+    type: Number,
     required: true,
   }
 });
 
-const Points = mongoose.model('Points', pointsSchema);
+const Points = mongoose.model('points', pointsSchema);
 
 module.exports = Points;
