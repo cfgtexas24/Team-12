@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box } from '@mui/material';
 
 const ApplicantTable = () => {
@@ -20,6 +19,7 @@ const ApplicantTable = () => {
         experience: 5,
         reason: 'Looking to mentor someone in my field.',
         preferredMenteeAttributes: 'Eager to learn',
+        role: 'Mentor', // New role field
         file: null,
       },
       {
@@ -32,6 +32,7 @@ const ApplicantTable = () => {
         experience: 3,
         reason: 'Want to give back to the community.',
         preferredMenteeAttributes: 'Creative and curious',
+        role: 'Mentee', // New role field
         file: null,
       },
     ];
@@ -82,6 +83,7 @@ const ApplicantTable = () => {
             <TableRow>
               <TableCell>First Name</TableCell>
               <TableCell>Last Name</TableCell>
+              <TableCell>Role</TableCell> {/* New column for role */}
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -92,6 +94,7 @@ const ApplicantTable = () => {
                 <TableRow>
                   <TableCell>{applicant.firstName}</TableCell>
                   <TableCell>{applicant.lastName}</TableCell>
+                  <TableCell>{applicant.role}</TableCell> {/* Display role */}
                   <TableCell>
                     <Select
                       value={statuses[applicant._id] || 'pending'}
@@ -114,7 +117,7 @@ const ApplicantTable = () => {
                 </TableRow>
                 {expandedRows[applicant._id] && (
                   <TableRow>
-                    <TableCell colSpan={4}>
+                    <TableCell colSpan={5}>
                       <Box p={2} border={1} borderColor="grey.300">
                         <Typography variant="h6">Details for {applicant.firstName} {applicant.lastName}</Typography>
                         <p><strong>Email:</strong> {applicant.email}</p>
