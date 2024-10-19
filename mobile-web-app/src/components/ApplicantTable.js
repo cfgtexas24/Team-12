@@ -85,7 +85,7 @@ const ApplicantTable = () => {
       console.log("MATCHED DETECTED");
       setTimeout(() => {
         sendEmail(applicantId);
-      }, 0); // Ensure state is updated before sending email
+      }, 0); 
     }
   };
 
@@ -133,12 +133,17 @@ const ApplicantTable = () => {
         console.log('Email sent successfully!', response.status, response.text);
         setEmailStatusMessage('Notified User of Match!');
         setEmailDialogOpen(true);
+        removeApplicant(applicantId);
       })
       .catch((error) => {
         console.error('Failed to send email.', error);
         setEmailStatusMessage('Failed to send email. Please try again.');
         setEmailDialogOpen(true);
       });
+  };
+
+  const removeApplicant = (applicantId) => {
+    setApplicants((prevApplicants) => prevApplicants.filter((applicant) => applicant._id !== applicantId));
   };
 
   return (
