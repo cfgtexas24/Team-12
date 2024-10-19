@@ -36,7 +36,7 @@ const Logon = () => {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Login Successful!');
+      
         // Redirect to UserLandingPage
         navigate('/dashboard');
       } else {

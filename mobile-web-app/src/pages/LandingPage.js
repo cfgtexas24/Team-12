@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Typography, Container, Box } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
-import ApplicantTable from '../components/ApplicantTable';
+//import ApplicantTable from '../components/ApplicantTable';
 
 // Import the logo image
 import logo from '../LOGO.png';
@@ -30,10 +30,7 @@ const LandingPage = () => {
         {/* Emergency Button at the top */}
         <EmergencyButton />
 
-        {/* Applicant Table Section */}
-        <Box sx={{ marginY: 4 }}>
-          <ApplicantTable />
-        </Box>
+       
 
         {/* Welcome and Description Section */}
         <Typography variant="h2" component="h1" gutterBottom align="center">
