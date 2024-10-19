@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
 import Register from './pages/Register'
-import SignUp from './pages/SignUp';
 import ChatRoom from './pages/ChatRoom';
 import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
@@ -19,7 +18,6 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
           <Route path="/register" element={<Register />} />
           <Route path="/chat" element={<ChatRoom />} />
           <Route path="/emergency" element={<EmergencyContact />} />
