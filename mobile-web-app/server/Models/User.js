@@ -1,6 +1,5 @@
 // Models/User.js
 const mongoose = require('mongoose');
-const { ClientType } = require('./ClientType')
 
 const userSchema = new mongoose.Schema({
   user_id: {
@@ -26,4 +25,7 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+module.exports = {
+  User,
+  userSchema
+};

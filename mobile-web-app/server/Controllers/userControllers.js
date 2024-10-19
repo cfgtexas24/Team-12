@@ -1,7 +1,8 @@
 // controllers/userControllers.js
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const Client = require('../Models/Client');
+const { ClientType } = require('../Models/ClientType');
 
 // Signup function
 const signup = async (req, res) => {
@@ -14,7 +15,7 @@ const signup = async (req, res) => {
     }
 
     // Validate user_type
-    if (![UserType.ADMIN, UserType.MENTOR, UserType.MENTEE].includes(user_type)) {
+    if (![ClientType.MENTOR, ClientType.MENTEE].includes(user_type)) {
       return res.status(400).json({ error: 'Invalid user type' });
     }
 
@@ -30,7 +31,7 @@ const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create new user
-    const newUser = await User.create({
+    const newUser = await Client.create({
       user_id: userId,
       user_type,
       name,
@@ -47,7 +48,7 @@ const signup = async (req, res) => {
 
 const getusers = async (req, res) => {
   try {
-    const data = await User.find(); 
+    const data = await Client.find(); 
     res.status(200).json(data.map(user => ({
       Name: user.name,
       Username: user.username
@@ -63,7 +64,7 @@ const getuser = async (req, res) => {
   const username = await req.params.username
 
   try {
-    const data = await User.findOne( {username} ); 
+    const data = await Client.findOne( {username} ); 
     res.status(200).json(data); 
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,5 +1,4 @@
-const { application } = require('express');
-const { clientType } = require('./ClientType')
+const mongoose = require('mongoose');
 
 const applicationSchema = new mongoose.Schema({
     application_id: {

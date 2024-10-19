@@ -8,3 +8,7 @@ const router = express.Router();
 router.post('/application/create', createApplication);
 
 module.exports = router;
+
+// {
+//     "application_details":  "Always jiggy yunno"
+// }

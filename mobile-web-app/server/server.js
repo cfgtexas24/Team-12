@@ -19,10 +19,10 @@ app.use(cors({
 
 // Initialize session middleware
 app.use(session({
-  secret: 'your-secret-key',   // Replace with your secret key
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }    // Set `secure: true` if using HTTPS
+  cookie: { secure: false }
 }));
 
 app.use(express.json());
@@ -45,8 +45,8 @@ mongoose.connect(MONGODB_URI, {
 });
 
 
-app.use('/api/user', userRoutes);
-app.use('/api/application', applicationRoutes)
+app.use('/api/users', userRoutes);
+app.use('/api/applications', applicationRoutes)
 
 // Start server
 app.listen(PORT, () => {
