@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import EmergencyButton from '../components/EmergencyButton';
+import logo from "../LOGO.png"
 import { 
   Container, 
   Grid, 
@@ -138,6 +140,18 @@ const UserLandingPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Emergency Button at the top */}
+      <EmergencyButton />
+
+      {/* Static Logo in the top left */}
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
+      </Box>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
           <SettingsIcon />
