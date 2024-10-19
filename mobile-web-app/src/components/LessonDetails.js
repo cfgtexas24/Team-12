@@ -1,8 +1,7 @@
 import { useState } from 'react';
-//import { lessonList } from '../data/cooking.js';
+import LessonDetails from '../components/LessonDetails.js';
 
-export default function LessonDetails({lesson}) {
-  // const [index, setIndex] = useState(0);
+export default function Gallery({ lesson }) {
   const [showMore, setShowMore] = useState(false);
 
   function handleMoreClick() {
@@ -41,18 +40,15 @@ export default function LessonDetails({lesson}) {
   }
 
   return (
-    <div>
-    <h2>
-      <i>{lesson.title} </i> by {lesson.author}
-    </h2>
-    <p>{lesson.description}</p>
-
-    <button onClick={handleMoreClick}>
-      {showMore ? 'Hide' : 'Show'} details
-    </button>
-
-    {showMore && <ContentManager lesson={lesson} />}
-
-  </div>
-  )
+    <div className="timeline-item">
+      <div className="timeline-content">
+        <h2>{lesson.title}</h2>
+        <p>{lesson.description}</p>
+        <button onClick={handleMoreClick}>
+          {showMore ? 'Hide details' : 'Show details'}
+        </button>
+        {showMore && <ContentManager lesson={lesson} />}
+      </div>
+    </div>
+  );
 }

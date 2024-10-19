@@ -114,7 +114,7 @@
   margin: 20px auto; /* Centers timeline container with automatic left-right margins */
   padding: 0 20px;
   width: 60%; /* Adjust width to fit better within the page, change this value as needed */
-  border-left: 4px solid #58CC02;
+  border-left: 4px solid #F1C40F;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -133,7 +133,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: #58CC02;
+  background-color: #F1C40F;
   border: 3px solid white;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -148,7 +148,7 @@
 }
 
 .timeline-content:hover {
-  background-color: #f7fff1;
+  background-color: #fdf9e6;
 }
 
 h3 {
@@ -162,30 +162,77 @@ p {
   color: #555;
 }
 
-.timeline-marker::after {
-  content: '🌟'; /* Optional playful icon */
-  display: block;
-  text-align: center;
-  line-height: 32px;
-  font-size: 16px;
+/* Timeline container */
+.timeline {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+  list-style-type: none;
+}
+
+/* Timeline item */
+.timeline-item {
+  margin: 20px 0;
+  position: relative;
+  padding-left: 50px;
+}
+
+/* Vertical line */
+.timeline-item:before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ccc;
+}
+
+/* Timeline content box */
+.timeline-content {
+  padding: 20px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Circle icon on the left */
+.timeline-item:after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  width: 15px;
+  height: 15px;
+  background-color: #8E44AD;
+  border-radius: 50%;
+  border: 3px solid white;
+  top: 20px;
+}
+
+/* Timeline content titles */
+.timeline-content h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+/* Timeline content buttons */
+.timeline-content button {
+  background-color: #8E44AD;
   color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.circle-button {
-  border-radius: 50%; /* Make it a circle */
-  width: 80px; /* Adjust the size as needed */
-  height: 80px; /* Keep the same as width for a perfect circle */
-  background-color: #4CAF50; /* Customize the color */
-  border: none; /* Remove default border */
-  display: flex; /* Center the content */
-  justify-content: right;
-  align-items: center;
-  cursor: pointer; /* Make it look like a clickable button */
-  margin-bottom: 20px;
+.timeline-content button:hover {
+  background-color: #8E44AD;
 }
 
-.side-text {
-  align-items: center;
-  justify-content: right;
-  margin-bottom: 20px;
+/* Video container styling */
+.video-container {
+  margin-top: 20px;
+  text-align: center;
 }
