@@ -3,6 +3,12 @@ const { v4: uuidv4 } = require('uuid');
 const Application = require('../Models/Application');
 
 // Controller to handle sending a message
+
+
+// {
+//     "application_details":  "Always jiggy yunno"
+// }
+
 const createApplication = async (req, res) => {
   const { text } = req.body;
 
