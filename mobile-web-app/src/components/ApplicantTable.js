@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import emailjs from '@emailjs/browser';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box } from '@mui/material';
 
 const ApplicantTable = () => {
   const [applicants, setApplicants] = useState([]);
   const [statuses, setStatuses] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
+  const form = useRef();
 
   useEffect(() => {
     // Sample data for testing
@@ -13,13 +15,13 @@ const ApplicantTable = () => {
         _id: '1',
         firstName: 'John',
         lastName: 'Doe',
-        email: 'john.doe@example.com',
+        email: 'cathyhou@college.harvard.edu',
         phone: '123-456-7890',
         occupation: 'Engineer',
         experience: 5,
         reason: 'Looking to mentor someone in my field.',
         preferredMenteeAttributes: 'Eager to learn',
-        role: 'Mentor', // New role field
+        role: 'Mentor',
         file: null,
       },
       {
@@ -32,7 +34,7 @@ const ApplicantTable = () => {
         experience: 3,
         reason: 'Want to give back to the community.',
         preferredMenteeAttributes: 'Creative and curious',
-        role: 'Mentee', // New role field
+        role: 'Mentee',
         file: null,
       },
     ];
@@ -50,6 +52,13 @@ const ApplicantTable = () => {
       ...prevStatuses,
       [applicantId]: newStatus,
     }));
+
+    if (newStatus === 'matched') {
+      console.log("MATCHED DETECTED");
+      setTimeout(() => {
+        sendEmail(applicantId);
+      }, 0); // Ensure state is updated before sending email
+    }
   };
 
   const toggleRowExpansion = (applicantId) => {
@@ -70,6 +79,34 @@ const ApplicantTable = () => {
       default:
         return 'inherit';
     }
+  };
+
+  const sendEmail = (applicantId) => {
+    const applicant = applicants.find((app) => app._id === applicantId);
+    if (!applicant) {
+      console.error(`Applicant with ID ${applicantId} not found.`);
+      return;
+    }
+
+    const templateParams = {
+      to_name: `${applicant.firstName} ${applicant.lastName}`,
+      to_email: applicant.email,
+      message: `Congratulations ${applicant.firstName}, you have been matched!`,
+    };
+
+    emailjs
+      .send(
+        process.env.REACT_APP_MATCH_SERVICE_ID,
+        process.env.REACT_APP_MATCH_TEMPLATE_ID,
+        templateParams,
+        process.env.REACT_APP_MATCH_PUBLIC_KEY
+      )
+      .then((response) => {
+        console.log('Email sent successfully!', response.status, response.text);
+      })
+      .catch((error) => {
+        console.error('Failed to send email.', error);
+      });
   };
 
   return (
