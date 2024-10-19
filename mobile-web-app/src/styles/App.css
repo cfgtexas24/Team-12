@@ -240,7 +240,7 @@ p {
 .yellowBarStyle {
   background-color: #F1C40F; /* Fixed to use background-color */
   text-align: center;
-  padding: 15px 0;
+  padding: 15px 0px;
   font-size: 24px;
   width: 100%;
   position: fixed; 
@@ -250,12 +250,21 @@ p {
 }
 
 .dropdownStyle {
-  padding: 10px;
-  margin: 20px 0; 
-  font-size: 16px;
-  border-radius: 5px;
+  padding: 15px 20px; /* Increased padding for a larger touch area */
+  margin-top: 60px;
+  margin-bottom: 10px; 
+  font-size: 18px; /* Slightly larger font for readability */
+  border-radius: 8px; /* Smoother corners */
   border: 1px solid #ccc;
   background-color: #f9f9f9;
   cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for hover effects */
 }
+
+.dropdownStyle:hover {
+  background-color: #f1f1f1; /* Slightly darker background on hover */
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Increased shadow on hover */
+}
+
 
