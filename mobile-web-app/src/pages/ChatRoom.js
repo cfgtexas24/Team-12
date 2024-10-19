@@ -23,6 +23,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import CallEndIcon from '@mui/icons-material/CallEnd';
 
+const generateShortId = () => {
+  return Math.random().toString(36).substr(2, 6).toUpperCase();
+};
+
 const ChatRoom = () => {
   const [channels, setChannels] = useState(['General', 'Mentors', 'Local Area']);
   const [selectedChannel, setSelectedChannel] = useState(null);
@@ -39,7 +43,7 @@ const ChatRoom = () => {
   const remoteVideoRef = useRef(null);
   const [localStream, setLocalStream] = useState(null);
 
-  // New state for P2P functionality
+  // PeerJS states
   const [peer, setPeer] = useState(null);
   const [myPeerId, setMyPeerId] = useState('');
   const [remotePeerId, setRemotePeerId] = useState('');
@@ -53,16 +57,10 @@ const ChatRoom = () => {
     { id: 4, name: 'Friend Emma', type: 'friend', avatar: '/api/placeholder/40/40' },
   ];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(scrollToBottom, [messages]);
-
   useEffect(() => {
-    const newPeer = new Peer();
-    setPeer(newPeer);
-
+    const shortId = generateShortId();
+    const newPeer = new Peer(shortId);
+    
     newPeer.on('open', (id) => {
       setMyPeerId(id);
       console.log('My peer ID is: ' + id);
@@ -73,19 +71,9 @@ const ChatRoom = () => {
       setupConnectionListeners(conn);
     });
 
-    newPeer.on('call', (call) => {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-          setLocalStream(stream);
-          localVideoRef.current.srcObject = stream;
-          call.answer(stream);
-          call.on('stream', (remoteStream) => {
-            remoteVideoRef.current.srcObject = remoteStream;
-          });
-          setIsInVideoCall(true);
-        })
-        .catch((err) => console.error('Failed to get local stream', err));
-    });
+    newPeer.on('call', handleIncomingCall);
+
+    setPeer(newPeer);
 
     return () => {
       if (localStream) {
@@ -95,8 +83,19 @@ const ChatRoom = () => {
     };
   }, []);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
   const setupConnectionListeners = (conn) => {
+    conn.on('open', () => {
+      console.log('Connection opened');
+    });
+
     conn.on('data', (data) => {
+      console.log('Received data:', data);
       if (data.type === 'message') {
         setMessages(prevMessages => ({
           ...prevMessages,
@@ -104,6 +103,24 @@ const ChatRoom = () => {
         }));
       }
     });
+  };
+
+  const handleIncomingCall = (call) => {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        setLocalStream(stream);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+        call.answer(stream);
+        call.on('stream', (remoteStream) => {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+          }
+        });
+        setIsInVideoCall(true);
+      })
+      .catch((err) => console.error('Failed to get local stream', err));
   };
 
   const connectToPeer = () => {
@@ -119,12 +136,13 @@ const ChatRoom = () => {
 
   const handleSendMessage = () => {
     if (newMessage.trim() !== '' && selectedChannel) {
+      const messageData = { type: 'message', message: newMessage };
       setMessages(prevMessages => ({
         ...prevMessages,
         [selectedChannel]: [...prevMessages[selectedChannel], { text: newMessage, sender: 'You' }]
       }));
       if (connection) {
-        connection.send({ type: 'message', message: newMessage });
+        connection.send(messageData);
       }
       setNewMessage('');
     }
@@ -146,10 +164,14 @@ const ChatRoom = () => {
       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then((stream) => {
           setLocalStream(stream);
-          localVideoRef.current.srcObject = stream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
           const call = peer.call(connection.peer, stream);
           call.on('stream', (remoteStream) => {
-            remoteVideoRef.current.srcObject = remoteStream;
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.srcObject = remoteStream;
+            }
           });
           setIsInVideoCall(true);
         })
@@ -163,6 +185,12 @@ const ChatRoom = () => {
     }
     setLocalStream(null);
     setIsInVideoCall(false);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
   };
 
   const renderLandingPage = () => (
@@ -202,7 +230,7 @@ const ChatRoom = () => {
   );
 
   const renderChatRoom = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
       {isInVideoCall && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, backgroundColor: '#000', height: '50%' }}>
           <video ref={localVideoRef} autoPlay muted style={{ width: '48%', height: '100%', objectFit: 'cover' }} />
@@ -304,16 +332,16 @@ const ChatRoom = () => {
       </AppBar>
 
       <Box sx={{ p: 2 }}>
-        <Typography>Your Peer ID: {myPeerId}</Typography>
+        <Typography>Your Chat ID: {myPeerId}</Typography>
         <TextField
-          label="Enter Peer ID to connect"
+          label="Enter friend's Chat ID"
           value={remotePeerId}
           onChange={(e) => setRemotePeerId(e.target.value)}
           fullWidth
           margin="normal"
         />
         <Button onClick={connectToPeer} variant="contained" color="primary">
-          Connect to Peer
+          Connect to Friend
         </Button>
       </Box>
 
