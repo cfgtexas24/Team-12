@@ -55,7 +55,6 @@ const EmergencyContact = () => {
   });
   };
 
-
   const sendEmail = (emailData) => {
     console.log("%s", process.env.REACT_APP_EMAILJS_SERVICE_ID);
     console.log("%s", process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
