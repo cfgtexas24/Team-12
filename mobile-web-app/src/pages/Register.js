@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
+import emailjs from '@emailjs/browser';
 import '../styles/App.css';
 
 const Register = () => {
@@ -12,7 +13,7 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const form = useRef();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,6 +22,26 @@ const Register = () => {
       ...formData,
       [name]: value,
     });
+  };
+
+  const sendEmail = () => {
+    emailjs
+      .sendForm(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        form.current,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+      )
+      .then(
+        () => {
+          console.log('Email sent successfully!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('Email sending failed...', error.text);
+          alert('Email sending failed...');
+        }
+      );
   };
 
   const handleSubmit = async (e) => {
@@ -33,7 +54,7 @@ const Register = () => {
     }
 
     const data = {
-      name: formData.username, // Using username as name for now
+      name: formData.username,
       username: formData.username,
       password: formData.password,
       user_type: 2 // Assuming 2 is for regular users/mentees
@@ -57,7 +78,8 @@ const Register = () => {
 
       const result = await response.json();
       console.log('Success:', result);
-      alert('Signup successful!');
+      sendEmail();
+      alert('Registration successful!');
       navigate('/signin');
     } catch (error) {
       console.error('Error:', error);
@@ -80,7 +102,7 @@ const Register = () => {
         <Typography component="h1" variant="h5">
           Register
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} ref={form} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
