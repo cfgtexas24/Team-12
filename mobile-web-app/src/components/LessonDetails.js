@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LessonDetails from '../components/LessonDetails.js';
+import { SetMealOutlined, SettingsInputAntennaTwoTone } from '@mui/icons-material';
 
-export default function Gallery({ lesson }) {
-  const [showMore, setShowMore] = useState(false);
+export default function Gallery({ lesson, showDetails, mount, setMount }) {
+//   const [showMore, setShowMore] = useState(false);
+  const [points, setPoints] = useState(0);
 
-  function handleMoreClick() {
-    setShowMore(!showMore);
+//   useEffect(() => {
+//     async function addPoints() {
+//         const response = await fetch(`http://localhost:8000/api/pointLookup?username=remember`, method = 'POST');
+        
+//     }
+//   })
+
+async function handleMoreClick() {
+  try {
+    // Make a GET request to your API to fetch the user's points
+    console.log(lesson.points)
+    console.log("here")
+    const response = await fetch(`http://localhost:8000/api/pointLookupAdd?username=remember&lesson=${lesson.points}`, {
+        method: 'POST'
+    });
+    setMount(mount+1)
+    // setPoints(1);
+    // location.reload();
+    
+    //console.log(points)
+  } catch (error) {
+    console.error('Failed to fetch points:', error);
   }
+}
 
   function VideoPlayer({ link }) {
     return (
@@ -44,11 +67,13 @@ export default function Gallery({ lesson }) {
       <div className="timeline-content">
         <h2>{lesson.title}</h2>
         <p>{lesson.description}</p>
-        <button onClick={handleMoreClick}>
-          {showMore ? 'Hide details' : 'Show details'}
-        </button>
-        {showMore && <ContentManager lesson={lesson} />}
+        {showDetails && <ContentManager lesson={lesson} />}
+        {showDetails && <button onClick={handleMoreClick} className="complete">
+          Complete
+        </button>}
       </div>
     </div>
   );
+
 }
+

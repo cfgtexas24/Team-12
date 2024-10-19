@@ -139,12 +139,12 @@
 }
 
 .timeline-content {
-  background-color: #ffffff;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
   width: 100%;
+  background-color: #fdf9e6;
 }
 
 .timeline-content:hover {
@@ -196,6 +196,7 @@ p {
   border: 1px solid #ddd;
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fdf9e6;
 }
 
 /* Circle icon on the left */
@@ -269,7 +270,7 @@ p {
 .dropdownStyle {
   padding: 15px 20px; /* Increased padding for a larger touch area */
   margin-top: 60px;
-  margin-bottom: 10px; 
+  margin-bottom: 30px; 
   font-size: 18px; /* Slightly larger font for readability */
   border-radius: 8px; /* Smoother corners */
   border: 1px solid #ccc;
@@ -284,4 +285,28 @@ p {
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15); /* Increased shadow on hover */
 }
 
+.progress {
+  width: 80%;  /* Adjust width as needed */
+  height: 20px; /* Increase the height to make it bigger */
+  appearance: none; /* Remove default styling for more control */
+  margin-top: 20px;
+}
 
+.progress::-webkit-progress-bar {
+  background-color: #f3f3f3; /* Background of the progress bar */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+}
+
+.progress::-webkit-progress-value {
+  background-color: #8E44AD; /* Color of the filled portion */
+  border-radius: 10px; /* Make the filled portion rounded */
+}
+
+.progress::-moz-progress-bar {
+  background-color: #8E44AD; /* For Firefox compatibility */
+}
+
+.complete {
+  margin-top: 10px;
+}

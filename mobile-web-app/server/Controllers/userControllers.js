@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const User = require('../Models/User');
 
 // Signup function
 const signup = async (req, res) => {
