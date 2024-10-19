@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Peer from 'peerjs';
 import { 
   Box, 
   AppBar, 
@@ -36,8 +37,13 @@ const ChatRoom = () => {
   const messagesEndRef = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const [peerConnection, setPeerConnection] = useState(null);
   const [localStream, setLocalStream] = useState(null);
+
+  // New state for P2P functionality
+  const [peer, setPeer] = useState(null);
+  const [myPeerId, setMyPeerId] = useState('');
+  const [remotePeerId, setRemotePeerId] = useState('');
+  const [connection, setConnection] = useState(null);
 
   // Mock data for mentors and friends
   const contacts = [
@@ -54,60 +60,61 @@ const ChatRoom = () => {
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    if (isInVideoCall) {
-      initializeWebRTC();
-    } else {
-      cleanupWebRTC();
-    }
-  }, [isInVideoCall]);
+    const newPeer = new Peer();
+    setPeer(newPeer);
 
-  const initializeWebRTC = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
+    newPeer.on('open', (id) => {
+      setMyPeerId(id);
+      console.log('My peer ID is: ' + id);
+    });
+
+    newPeer.on('connection', (conn) => {
+      setConnection(conn);
+      setupConnectionListeners(conn);
+    });
+
+    newPeer.on('call', (call) => {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          setLocalStream(stream);
+          localVideoRef.current.srcObject = stream;
+          call.answer(stream);
+          call.on('stream', (remoteStream) => {
+            remoteVideoRef.current.srcObject = remoteStream;
+          });
+          setIsInVideoCall(true);
+        })
+        .catch((err) => console.error('Failed to get local stream', err));
+    });
+
+    return () => {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
       }
+      newPeer.destroy();
+    };
+  }, []);
 
-      const pc = new RTCPeerConnection();
-      setPeerConnection(pc);
-
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
-
-      pc.ontrack = (event) => {
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-        }
-      };
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          // Send the candidate to the remote peer
-          // You'll need to implement signaling here
-        }
-      };
-
-      // Create and send an offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      // Send the offer to the remote peer
-      // You'll need to implement signaling here
-
-    } catch (error) {
-      console.error("Error initializing WebRTC:", error);
-    }
+  const setupConnectionListeners = (conn) => {
+    conn.on('data', (data) => {
+      if (data.type === 'message') {
+        setMessages(prevMessages => ({
+          ...prevMessages,
+          [selectedChannel]: [...prevMessages[selectedChannel], { text: data.message, sender: 'Peer' }]
+        }));
+      }
+    });
   };
 
-  const cleanupWebRTC = () => {
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+  const connectToPeer = () => {
+    if (peer && remotePeerId) {
+      const conn = peer.connect(remotePeerId);
+      conn.on('open', () => {
+        setConnection(conn);
+        setupConnectionListeners(conn);
+        console.log('Connected to peer:', remotePeerId);
+      });
     }
-    if (peerConnection) {
-      peerConnection.close();
-    }
-    setLocalStream(null);
-    setPeerConnection(null);
   };
 
   const handleSendMessage = () => {
@@ -116,6 +123,9 @@ const ChatRoom = () => {
         ...prevMessages,
         [selectedChannel]: [...prevMessages[selectedChannel], { text: newMessage, sender: 'You' }]
       }));
+      if (connection) {
+        connection.send({ type: 'message', message: newMessage });
+      }
       setNewMessage('');
     }
   };
@@ -128,15 +138,30 @@ const ChatRoom = () => {
   };
 
   const handleContactClick = (contact) => {
-    // For now, just navigate to the General channel
     setSelectedChannel('General');
   };
 
   const startVideoCall = () => {
-    setIsInVideoCall(true);
+    if (connection) {
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          setLocalStream(stream);
+          localVideoRef.current.srcObject = stream;
+          const call = peer.call(connection.peer, stream);
+          call.on('stream', (remoteStream) => {
+            remoteVideoRef.current.srcObject = remoteStream;
+          });
+          setIsInVideoCall(true);
+        })
+        .catch((err) => console.error('Failed to get local stream', err));
+    }
   };
 
   const endVideoCall = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    setLocalStream(null);
     setIsInVideoCall(false);
   };
 
@@ -277,6 +302,20 @@ const ChatRoom = () => {
           </Typography>
         </Toolbar>
       </AppBar>
+
+      <Box sx={{ p: 2 }}>
+        <Typography>Your Peer ID: {myPeerId}</Typography>
+        <TextField
+          label="Enter Peer ID to connect"
+          value={remotePeerId}
+          onChange={(e) => setRemotePeerId(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
+        <Button onClick={connectToPeer} variant="contained" color="primary">
+          Connect to Peer
+        </Button>
+      </Box>
 
       <Drawer
         anchor="left"
