@@ -1,6 +1,125 @@
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const Points = require('../Models/points');
+
+
+const addPoint = async (req, res) => {
+    try {
+      const { username, lesson } = req.query;
+      console.log(username)
+      console.log(lesson)
+  
+      // Create a filter for the document to update
+      const filter = { username: username }; // Use the username from the request body
+  
+      // Create an update document to increment cookingPoints by 1
+      // const updateDoc = {
+      // $inc: {
+      //   cookingPoints: 1, // Increment the cookingPoints field by 1
+      // }
+
+      if (lesson === 'cookingPoints') {
+        updateDoc = {
+          $inc: {
+            cookingPoints: 1, // Increment the cookingPoints field by 1
+          },
+        };
+        const result = await Points.updateOne(filter, updateDoc);
+      } else if (lesson === 'careerPoints') {
+        const updateDoc = {
+          $inc: {
+            careerPoints: 1, // Increment the cookingPoints field by 1
+          },
+        };
+        const result = await Points.updateOne(filter, updateDoc);
+      } else if (lesson === 'stressPoints') {
+        const updateDoc = {
+          $inc: {
+            stressPoints: 1, // Increment the cookingPoints field by 1
+          },
+        };
+        const result = await Points.updateOne(filter, updateDoc);
+      } else if (lesson === 'financePoints') {
+        const updateDoc = {
+          $inc: {
+            financePoints: 1, // Increment the cookingPoints field by 1
+          },
+        };
+        const result = await Points.updateOne(filter, updateDoc);
+      }
+      
+  
+      // Update a single document
+      // const result = await Points.updateOne(filter, updateDoc);
+  
+      // Check if a document was modified
+      if (result.modifiedCount === 1) {
+        res.status(200).json({ message: 'Points added successfully' }); // Changed to 200 for success
+      } else {
+        console.log("Not incremented sucessfully")
+        res.status(404).json({ message: 'User not found or points not updated' });
+      }
+    } catch (error) {
+      console.error('Error updating points:', error);
+      res.status(500).json({ error: 'Failed to add points', details: error.message });
+    }
+  };
+  
+
+// Add point function
+const pointLookup = async (req, res) => {
+    try {
+      // console.log(req)
+      // console.log(req.query)
+        // Destructure the points from the request body
+        const { username } = req.query;
+        // console.log(username)
+
+        // Ensure the username is provided
+        if (!username) {
+            return res.status(400).json({ message: "Username is required." });
+        }
+
+        // Fetch the existing points for the user
+        const userPoints = await Points.findOne({ "username": username });
+        // console.log(userPoints)
+        
+        if (!userPoints) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Calculate the total points
+        const total = userPoints.cookingPoints + userPoints.financePoints + userPoints.stressPoints + userPoints.careerPoints;
+
+        // Update the user points in the database
+        await userPoints.save();
+
+        // Return the updated points and total
+        return res.status(200).json({
+            message: "Points retrieved successfully.",
+            points: {
+                Cooking: userPoints.cookingPoints,
+                FinancialLiteracy: userPoints.financePoints,
+                StressManagement: userPoints.stressPoints,
+                CareerReadiness: userPoints.careerPoints,
+                total: total
+            }
+        });
+
+    } catch (error) {
+        console.error("Error updating points:", error);
+        return res.status(500).json({ message: "Internal server error." });
+    }
+};
+
+
+module.exports = {
+  addPoint,
+  pointLookup,
+};
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
+const User = require('../Models/User');
 
 // Signup function
 const signup = async (req, res) => {
@@ -171,6 +290,34 @@ const NotificationType = Object.freeze({
   
   module.exports = NotificationType;
   
+const mongoose = require('mongoose');
+
+const pointsSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+  },
+  cookingPoints: {
+    type: Number,
+    required: true,
+  },
+  financePoints: {
+    type: Number,
+    required: true,
+  },
+  stressPoints: {
+    type: Number,
+    required: true,
+  },
+  careerPoints: {
+    type: Number,
+    required: true,
+  }
+});
+
+const Points = mongoose.model('points', pointsSchema);
+
+module.exports = Points;
 // Models/User.js
 const mongoose = require('mongoose');
 
@@ -214,6 +361,15 @@ module.exports = {
 };
 const express = require('express');
 const router = express.Router();
+const { addPoint, pointLookup } = require('../Controllers/pointController');
+
+router.get('/hello', () => console.log("hello"))
+router.post('/pointLookupAdd', addPoint);
+router.get('/pointLookup', pointLookup);
+
+module.exports = router;
+const express = require('express');
+const router = express.Router();
 const { signup, login } = require('../Controllers/userControllers');
 
 
@@ -226,6 +382,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
+const pointRoutes = require('./routes/pointRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -258,18 +415,23 @@ mongoose.connect(MONGODB_URI, {
 
 // Routes
 app.use('/api', userRoutes);
+app.use('/api', pointRoutes);
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-import React, { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import emailjs from '@emailjs/browser';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const ApplicantTable = () => {
   const [applicants, setApplicants] = useState([]);
   const [statuses, setStatuses] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailStatusMessage, setEmailStatusMessage] = useState('');
+  const form = useRef();
 
   useEffect(() => {
     // Sample data for testing
@@ -284,7 +446,7 @@ const ApplicantTable = () => {
         experience: 5,
         reason: 'Looking to mentor someone in my field.',
         preferredMenteeAttributes: 'Eager to learn',
-        role: 'Mentor', // New role field
+        role: 'Mentor',
         file: null,
       },
       {
@@ -297,9 +459,35 @@ const ApplicantTable = () => {
         experience: 3,
         reason: 'Want to give back to the community.',
         preferredMenteeAttributes: 'Creative and curious',
-        role: 'Mentee', // New role field
+        role: 'Mentee',
         file: null,
       },
+      {
+        _id: '3',
+        firstName: 'Alice',
+        lastName: 'Johnson',
+        email: 'alice.johnson@example.com',
+        phone: '555-123-4567',
+        occupation: 'Developer',
+        experience: 4,
+        reason: 'Interested in sharing knowledge.',
+        preferredMenteeAttributes: 'Motivated and curious',
+        role: 'Mentor',
+        file: null,
+      },
+      {
+        _id: '4',
+        firstName: 'Bob',
+        lastName: 'Brown',
+        email: 'bob.brown@example.com',
+        phone: '555-987-6543',
+        occupation: 'Product Manager',
+        experience: 6,
+        reason: 'Looking to guide someone in product development.',
+        preferredMenteeAttributes: 'Passionate about learning',
+        role: 'Mentor',
+        file: null,
+      }
     ];
 
     setApplicants(sampleApplicants);
@@ -315,6 +503,13 @@ const ApplicantTable = () => {
       ...prevStatuses,
       [applicantId]: newStatus,
     }));
+
+    if (newStatus === 'matched') {
+      console.log("MATCHED DETECTED");
+      setTimeout(() => {
+        sendEmail(applicantId);
+      }, 0); 
+    }
   };
 
   const toggleRowExpansion = (applicantId) => {
@@ -335,6 +530,43 @@ const ApplicantTable = () => {
       default:
         return 'inherit';
     }
+  };
+
+  const sendEmail = (applicantId) => {
+    const applicant = applicants.find((app) => app._id === applicantId);
+    if (!applicant) {
+      console.error(`Applicant with ID ${applicantId} not found.`);
+      return;
+    }
+
+    const templateParams = {
+      to_name: `${applicant.firstName} ${applicant.lastName}`,
+      to_email: applicant.email,
+      message: `Congratulations ${applicant.firstName}, you have been matched!`,
+    };
+
+    emailjs
+      .send(
+        process.env.REACT_APP_MATCH_SERVICE_ID,
+        process.env.REACT_APP_MATCH_TEMPLATE_ID,
+        templateParams,
+        process.env.REACT_APP_MATCH_PUBLIC_KEY
+      )
+      .then((response) => {
+        console.log('Email sent successfully!', response.status, response.text);
+        setEmailStatusMessage('Notified User of Match!');
+        setEmailDialogOpen(true);
+        removeApplicant(applicantId);
+      })
+      .catch((error) => {
+        console.error('Failed to send email.', error);
+        setEmailStatusMessage('Failed to send email. Please try again.');
+        setEmailDialogOpen(true);
+      });
+  };
+
+  const removeApplicant = (applicantId) => {
+    setApplicants((prevApplicants) => prevApplicants.filter((applicant) => applicant._id !== applicantId));
   };
 
   return (
@@ -401,6 +633,17 @@ const ApplicantTable = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+        <DialogTitle>Email Status</DialogTitle>
+        <DialogContent>
+          <Typography>{emailStatusMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEmailDialogOpen(false)} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
@@ -469,15 +712,38 @@ const EmergencyBanner = () => {
 };
 
 export default EmergencyBanner;
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import LessonDetails from '../components/LessonDetails.js';
+import { SetMealOutlined, SettingsInputAntennaTwoTone } from '@mui/icons-material';
 
-export default function Gallery({ lesson }) {
-  const [showMore, setShowMore] = useState(false);
+export default function Gallery({ lesson, showDetails, mount, setMount }) {
+//   const [showMore, setShowMore] = useState(false);
+  const [points, setPoints] = useState(0);
 
-  function handleMoreClick() {
-    setShowMore(!showMore);
+//   useEffect(() => {
+//     async function addPoints() {
+//         const response = await fetch(`http://localhost:8000/api/pointLookup?username=remember`, method = 'POST');
+        
+//     }
+//   })
+
+async function handleMoreClick() {
+  try {
+    // Make a GET request to your API to fetch the user's points
+    console.log(lesson.points)
+    console.log("here")
+    const response = await fetch(`http://localhost:8000/api/pointLookupAdd?username=remember&lesson=${lesson.points}`, {
+        method: 'POST'
+    });
+    setMount(mount+1)
+    // setPoints(1);
+    // location.reload();
+    
+    //console.log(points)
+  } catch (error) {
+    console.error('Failed to fetch points:', error);
   }
+}
 
   function VideoPlayer({ link }) {
     return (
@@ -515,14 +781,16 @@ export default function Gallery({ lesson }) {
       <div className="timeline-content">
         <h2>{lesson.title}</h2>
         <p>{lesson.description}</p>
-        <button onClick={handleMoreClick}>
-          {showMore ? 'Hide details' : 'Show details'}
-        </button>
-        {showMore && <ContentManager lesson={lesson} />}
+        {showDetails && <ContentManager lesson={lesson} />}
+        {showDetails && <button onClick={handleMoreClick} className="complete">
+          Complete
+        </button>}
       </div>
     </div>
   );
+
 }
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
@@ -607,7 +875,12 @@ const PopupChat = ({ messages, onSendMessage }) => {
       <Fab
         color="primary"
         aria-label="chat"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 80, sm: 16 }, // Adjust for mobile and desktop
+          right: 16,
+          zIndex: 1000, // Ensure it's above other content
+        }}
         onClick={handleToggle}
       >
         <ChatIcon />
@@ -616,7 +889,13 @@ const PopupChat = ({ messages, onSendMessage }) => {
         anchor="right"
         open={isOpen}
         onClose={handleToggle}
-        PaperProps={{ sx: { width: '300px' } }}
+        PaperProps={{ 
+          sx: { 
+            width: { xs: '100%', sm: '300px' },
+            height: { xs: 'calc(100% - 56px)', sm: '100%' }, // Adjust height for mobile
+            bottom: { xs: 56, sm: 0 }, // Position above navbar on mobile
+          } 
+        }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
@@ -693,45 +972,52 @@ export const careerList = [{
   author: "UC Davis Career Center",
   description: "Brief introduction into how to approach your own career readiness.",
   type: "YouTube",
-  url: 'https://www.youtube.com/embed/oex8FCqivwk?si=Ku_zqaL4yrXi6jiL'
+  url: 'https://www.youtube.com/embed/oex8FCqivwk?si=Ku_zqaL4yrXi6jiL',
+  points: 'careerPoints'
 }, {
   title: 'Digital Technology',
   author: "Career Exploration and Success",
   description: "Shilp Shah shares his experience in leveraging existing digital technologies ethically and efficiently to solve problems, complete tasks, and accomplish goals.",
   type: "YouTube",
-  url: 'https://www.youtube.com/embed/pB5PUndFKe4?si=DDcl5UcTZVdTfE9O'
+  url: 'https://www.youtube.com/embed/pB5PUndFKe4?si=DDcl5UcTZVdTfE9O',
+  points: 'careerPoints'
 }, {
   title: 'Career Management',
   author: "Career Exploration and Success",
   description: "Thomas Woods shares how he was able to identify and articulate his skills, strengths, knowledge, and experiences as he navigates being a FIGS Peer Instructor.",
   type: "YouTube",
-  url: 'https://www.youtube.com/embed/Lwr8bfWphSk?si=DgJ_aTkxNEMWaQzp'
+  url: 'https://www.youtube.com/embed/Lwr8bfWphSk?si=DgJ_aTkxNEMWaQzp',
+  points: 'careerPoints'
 }, {
   title: 'Communication',
   author: "Career Exploration and Success",
   description: "Colleen shares advice for you when it comes to taking advantage of opportunities and how they prepare you for a career.",
   type: "YouTube",
-  url: 'https://www.youtube.com/embed/5WGjCHnR9dk?si=ESW_ZUgIteTo8pSP'
+  url: 'https://www.youtube.com/embed/5WGjCHnR9dk?si=ESW_ZUgIteTo8pSP',
+  points: 'careerPoints'
 }, {
   title: 'Leadership',
   author: "Career Exploration and Success",
   description: "Dean Schansinger shares his career-readiness story by being the Rutgers Housing Association (RHA) president at Rutgers–New Brunswick.",
   type: "YouTube",
-  url: 'https://www.youtube.com/embed/JED_r0TuZ_M?si=N-zOwaHHvzeeTZBR'
+  url: 'https://www.youtube.com/embed/JED_r0TuZ_M?si=N-zOwaHHvzeeTZBR',
+  points: 'careerPoints'
 }, {
   title: 'Professionalism/Work Ethic',
   author: "Career Exploration and Success",
   type: "YouTube",
   description: "Hear from Shamir Willis as he shares his experience working in the department of Student Centers and Activities and how it paved the way for his career readiness. ",
   url: 'https://www.youtube.com/embed/EaUCNfI7p_s?si=HpIS06c-7BtrXS_E',
-  text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.'  
+  text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.',  
+  points: 'careerPoints'
 }, {
   title: 'Global Fluency',
   author: "Career Exploration and Success",
   type: "YouTube",
   description: "Before the pandemic, Anna shares how studying abroad helped with her career readiness. ",
   url: 'https://www.youtube.com/embed/kXmLY1lz90k?si=7UlRwtLenv3QC8cl',
-  text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.'  
+  text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.',
+  points: 'careerPoints'
 }];
 export const cookingList = [
   {
@@ -739,143 +1025,202 @@ export const cookingList = [
     author: 'The Spruce Eats',
     type: 'YouTube',
     url: 'https://www.youtube.com/embed/aopS3q6f1GY?si=xtxkBTbGGqkQDfuC',
-    description: "Professional chef instructor Frank Proto shares his top tips for beginners, helping you to elevate the basic skills you'll need to find your footing in the kitchen."
-  },
-  {
-    title: 'Chicken Quesadilla',
-    author: 'Marta Colvin Andrade',
-    description: 'A recipe for a healthy chicken quesadilla using corn and zucchini.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/bDQ2MUERJAg?si=Mh_kv63JOWTgA-ZD'
-  },
-  {
-    title: 'How to Make Perfect Hard Boiled Eggs',
-    author: 'Tasty',
-    description: 'Learn how to make hard-boiled eggs perfectly every time.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/FTha4zARGN4?si=_kRxWxnGEzPaipP7'
-  },
-  {
-    title: 'The Perfect Grilled Cheese Sandwich',
-    author: 'Epicurious',
-    description: 'Master the art of making the perfect grilled cheese sandwich.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF'
-  },
-  {
-    title: 'How to boil pasta',
-    author: 'The Cooking Corner',
-    description: 'Perfect guide to getting your pasta just right.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z'
+    description: "Professional chef instructor Frank Proto shares his top tips for beginners, helping you to elevate the basic skills you'll need to find your footing in the kitchen.",
+    points: 'cookingPoints'
   },
   {
     title: '10 Cooking Hacks You Wish You Knew Sooner',
     author: 'BuzzFeed Nifty',
     description: 'Quick cooking hacks to make your life easier in the kitchen.',
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5'
+    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5',
+    points: 'cookingPoints'
+  },
+  {
+    title: 'How to Boil Pasta',
+    author: 'The Cooking Corner',
+    description: 'Perfect guide to getting your pasta just right.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z',
+    points: 'cookingPoints'
+  },
+  {
+    title: 'Chicken Quesadilla',
+    author: 'Marta Colvin Andrade',
+    description: 'A recipe for a healthy chicken quesadilla using corn and zucchini.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/bDQ2MUERJAg?si=Mh_kv63JOWTgA-ZD',
+    points: 'cookingPoints'
+  },
+  {
+    title: 'How to Make Perfect Hard Boiled Eggs',
+    author: 'Tasty',
+    description: 'Learn how to make hard-boiled eggs perfectly every time.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/FTha4zARGN4?si=_kRxWxnGEzPaipP7',
+    points: 'cookingPoints'
+  },
+  {
+    title: 'The Perfect Grilled Cheese Sandwich',
+    author: 'Epicurious',
+    description: 'Master the art of making the perfect grilled cheese sandwich.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF',
+    points: 'cookingPoints'
   }
+  
+  
 ];
 export const financialList = [{
-    title: 'A Beginners Guide to Financial Education',
-    author: "Charlee Wayne",
-    description: "This video is a beginners guide to financial literacy, or the knowledge and skills to make smart money decisions in your personal finances.",
-    type: "YouTube",
-    url: 'https://www.youtube.com/embed/4XZIv4__sQA?si=2bMFgDD-O-2isTee'
-  }, {
-    title: 'You and Your Money', 
-    author: "OpenLearn",
-    type: "website",
-    description: "Learn how to choose and manage bank accounts, savings accounts, and credit cards, review bank statements, understand credit rating agencies' impact, make informed decisions about phone contracts and insurance, and conduct secure financial transactions.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67802',
-    text: 'Let’s get started. Bobby Seagull introduces the course in the first video and outlines some of the ways your money becomes more important as you come to the end of school or college. In this session you will explore banking and saving, and why you need skills in managing your money. It’s all about choosing to keep safe and take control.'  
-  }, {
-    title: 'Earning Money, Understanding Tax',
-    author: "OpenLearn",
-    type: "website",
-    description: "Gain knowledge about minimum wage and employment rights, assess the pros and cons of zero-hour contracts, understand Income Tax, National Insurance Contributions, tax codes, filing tax returns, and the basics of state benefits and means testing.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67800',
-    text: 'As you start to earn an income from part-time or holiday work you’ll want to understand why some of what you earn can be deducted in the form of Income Tax and National Insurance Contributions (NICs). What are these, when do you have to pay them and how do you claim back tax if you’ve paid more than you should? What does the government do with the Income Tax and National Insurance that it raises? As you’ll learn here, a substantial proportion of government spending is on benefits for various groups within the population. Might you be eligible for any benefits?'  
-  }, {
-    title: 'Being a Savvy Shopper and Building a Budget',
-    author: "OpenLearn",
-    type: "website",
-    description: "Learn to distinguish between essential and non-essential spending, make informed decisions about phone contracts and insurance, recognize behavioral biases in spending, shop online safely, and create and use a simple budget.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67803',
-    text: 'In this session the focus turns first to spending and the factors that determine our spending habits. You then start to build a simple budget. This is going to skill you up to manage your personal finances effectively in the period before you leave home.'  
-  }, {
-    title: 'Preparing for Life After School',
-    author: "OpenLearn",
-    type: "website",
-    description: "Explore post-secondary education options, learn how to finance further studies, take advantage of youth discounts, create a detailed budget for living independently, and manage the financial pressures of living away from home.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67821',
-    text: 'Your focus in this session is reaching that key point in your life where you decide what you want to do when your schooldays are over. Whatever choice you make, it will have financial consequences for you – especially as this is normally when wider responsibilities for financial management are passed from your parents to you.'  
-  }, {
-    title: 'Living in Shared Households',
-    author: "OpenLearn",
-    type: "website",
-    description: "Make informed decisions when choosing a rental property, understand the financial costs and responsibilities of being a tenant, manage potential tenancy issues, and account for the budgetary impact of living in a shared rental.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67859',
-    text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.'  
-  }, {
-    title: 'Understanding Debt and How to Borrow Wisely',
-    author: "OpenLearn",
-    type: "website",
-    description: "Learn about different borrowing options and debt products, recognize when borrowing is sensible versus reckless, understand what affects the cost of borrowing, and compare debt products based on interest rates.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67860',
-    text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.'  
-  }, {
-    title: 'Good Credit and How to Keep it',
-    author: "OpenLearn",
-    type: "website",
-    description: "Evaluate the pros and cons of borrowing for purchases compared to other financing methods, understand credit scoring and the role of credit reference agencies, learn how to maintain a good credit score, and know your options if you encounter debt problems.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67862',
-    text: 'You’ve looked at the institutions that lend money, the various ways money can be borrowed and at what determines the cost of borrowing. You’ve also looked at when borrowing is rational and when it is foolish. In this session you extend your analysis of debt and explore how to integrate the cost of managing your debts within your budget. You take a look at the activities of the credit reference agencies and at how you can manage your financial profile to maximize the credit score assigned to you.'  
-  }, {
-    title: 'Planning Now for Later in Your Life',
-    author: "OpenLearn",
-    type: "website",
-    description: "Learn the steps to buy a property, plan for a solid pension and understand the expected state pension, explore alternative pension products and their income determinants, and apply the four-stage financial planning model for significant financial decisions.",
-    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67875',
-    description: 'The earlier you start to plan and save for your pension the better the outcome will be for you in later life when you retire from work. Starting a pension plan in your early 20s make sense. If you leave it until you’re in your 40s and 50s you risk being in income poverty when you retire. Here you’ll learn more about the risks and returns from different types of investment.'  
-  }, {
-    title: 'Wrapping Up - A Comprehensive Video about Personal Finance',
-    author: "Trip2Wealth",
-    description: "Is it possible to maintain a comfortable standard of living despite having a little income? Are the risks associated with investing in the stock market for regular people manageable? The answer of all these questions lies in one thing. That is financial literacy. With Financial literacy all that is possible. The thing is you don’t need to inherit a lot of money or having high salary to live a financially free life, rather the answer lies in managing your finances better and efficiently.And how one can do that.",
-    type: "YouTube",
-    url: 'https://www.youtube.com/embed/0kwl10ftLm0?si=F3wI1ZZN4yXMR9P3'
-  }];
-  
+  title: 'A Beginners Guide to Financial Education',
+  author: "Charlee Wayne",
+  description: "This video is a beginners guide to financial literacy, or the knowledge and skills to make smart money decisions in your personal finances.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/4XZIv4__sQA?si=2bMFgDD-O-2isTee',
+  points: 'financePoints'
+}, {
+  title: 'You and Your Money', 
+  author: "OpenLearn",
+  type: "website",
+  description: "Learn how to choose and manage bank accounts, savings accounts, and credit cards, review bank statements, understand credit rating agencies' impact, make informed decisions about phone contracts and insurance, and conduct secure financial transactions.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67802',
+  text: 'Let’s get started. Bobby Seagull introduces the course in the first video and outlines some of the ways your money becomes more important as you come to the end of school or college. In this session you will explore banking and saving, and why you need skills in managing your money. It’s all about choosing to keep safe and take control.',
+  points: 'financePoints'
+}, {
+  title: 'Earning Money, Understanding Tax',
+  author: "OpenLearn",
+  type: "website",
+  description: "Gain knowledge about minimum wage and employment rights, assess the pros and cons of zero-hour contracts, understand Income Tax, National Insurance Contributions, tax codes, filing tax returns, and the basics of state benefits and means testing.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67800',
+  text: 'As you start to earn an income from part-time or holiday work you’ll want to understand why some of what you earn can be deducted in the form of Income Tax and National Insurance Contributions (NICs). What are these, when do you have to pay them and how do you claim back tax if you’ve paid more than you should? What does the government do with the Income Tax and National Insurance that it raises? As you’ll learn here, a substantial proportion of government spending is on benefits for various groups within the population. Might you be eligible for any benefits?',
+  points: 'financePoints'
+}, {
+  title: 'Being a Savvy Shopper and Building a Budget',
+  author: "OpenLearn",
+  type: "website",
+  description: "Learn to distinguish between essential and non-essential spending, make informed decisions about phone contracts and insurance, recognize behavioral biases in spending, shop online safely, and create and use a simple budget.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67803',
+  text: 'In this session the focus turns first to spending and the factors that determine our spending habits. You then start to build a simple budget. This is going to skill you up to manage your personal finances effectively in the period before you leave home.',
+  points: 'financePoints'
+
+}, {
+  title: 'Preparing for Life After School',
+  author: "OpenLearn",
+  type: "website",
+  description: "Explore post-secondary education options, learn how to finance further studies, take advantage of youth discounts, create a detailed budget for living independently, and manage the financial pressures of living away from home.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67821',
+  text: 'Your focus in this session is reaching that key point in your life where you decide what you want to do when your schooldays are over. Whatever choice you make, it will have financial consequences for you – especially as this is normally when wider responsibilities for financial management are passed from your parents to you.',
+  points: 'financePoints'
+}, {
+  title: 'Living in Shared Households',
+  author: "OpenLearn",
+  type: "website",
+  description: "Make informed decisions when choosing a rental property, understand the financial costs and responsibilities of being a tenant, manage potential tenancy issues, and account for the budgetary impact of living in a shared rental.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67859',
+  text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.',
+  points: 'financePoints'
+}, {
+  title: 'Understanding Debt and How to Borrow Wisely',
+  author: "OpenLearn",
+  type: "website",
+  description: "Learn about different borrowing options and debt products, recognize when borrowing is sensible versus reckless, understand what affects the cost of borrowing, and compare debt products based on interest rates.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67860',
+  text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.',
+  points: 'financePoints'
+}, {
+  title: 'Good Credit and How to Keep it',
+  author: "OpenLearn",
+  type: "website",
+  description: "Evaluate the pros and cons of borrowing for purchases compared to other financing methods, understand credit scoring and the role of credit reference agencies, learn how to maintain a good credit score, and know your options if you encounter debt problems.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67862',
+  text: 'You’ve looked at the institutions that lend money, the various ways money can be borrowed and at what determines the cost of borrowing. You’ve also looked at when borrowing is rational and when it is foolish. In this session you extend your analysis of debt and explore how to integrate the cost of managing your debts within your budget. You take a look at the activities of the credit reference agencies and at how you can manage your financial profile to maximize the credit score assigned to you.',
+  points: 'financePoints'
+}, {
+  title: 'Planning Now for Later in Your Life',
+  author: "OpenLearn",
+  type: "website",
+  description: "Learn the steps to buy a property, plan for a solid pension and understand the expected state pension, explore alternative pension products and their income determinants, and apply the four-stage financial planning model for significant financial decisions.",
+  url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67875',
+  description: 'The earlier you start to plan and save for your pension the better the outcome will be for you in later life when you retire from work. Starting a pension plan in your early 20s make sense. If you leave it until you’re in your 40s and 50s you risk being in income poverty when you retire. Here you’ll learn more about the risks and returns from different types of investment.',
+  points: 'financePoints'
+}, {
+  title: 'Wrapping Up - A Comprehensive Video about Personal Finance',
+  author: "Trip2Wealth",
+  description: "Is it possible to maintain a comfortable standard of living despite having a little income? Are the risks associated with investing in the stock market for regular people manageable? The answer of all these questions lies in one thing. That is financial literacy. With Financial literacy all that is possible. The thing is you don’t need to inherit a lot of money or having high salary to live a financially free life, rather the answer lies in managing your finances better and efficiently.And how one can do that.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/0kwl10ftLm0?si=F3wI1ZZN4yXMR9P3',
+  points: 'financePoints'
+}];
 export const stressList = [{
     title: 'Stress 101 - Understanding Stress and How to Manage It',
     author: "HealthTexas Medical Group",
     description: "Understand what stress is and how it affects your daily life. In this video, we will talk about how to manage stress and prevent it from taking a toll on our health.",
     type: "YouTube",
-    url: 'https://www.youtube.com/embed/9Hto1HeMrYQ?si=F7v5p9WxhJK78TZy'
+    url: 'https://www.youtube.com/embed/9Hto1HeMrYQ?si=F7v5p9WxhJK78TZy',
+    points: 'stressPoints'
 },
 {
     title: 'Meditation 101',
     author: 'Dr. Christian Conte',
     description: "Be easy on yourself as you are learning to meditate! Remember that, like exercise, it takes practice to get down - but please don't give up. Research shows that meditation helps you lessen activity in your Default Mode Network (helping you quiet your inner chatter), helps you regulate your emotions, reduce blood pressure, and many other health benefits. Take the time to meditate.",
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/hhroD8WPT6s?si=_BZLMDPKjbqsHBZp'
+    url: 'https://www.youtube.com/embed/hhroD8WPT6s?si=_BZLMDPKjbqsHBZp',
+    points: 'stressPoints'
 }, {
     title: 'How to Practice Mindfulness',
     author: 'Psych Hub',
     description: 'Practicing mindfulness through meditation or other techniques improves both mental and physical health. Follow this body scan exercise to help improve focus and overall wellbeing.',
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/bLpChrgS0AY?si=LPvARgT2XphJTxeX'
+    url: 'https://www.youtube.com/embed/bLpChrgS0AY?si=LPvARgT2XphJTxeX',
+    points: 'stressPoints'
 },
 {
     title: 'How to cope with anxiety | Olivia Remes | TEDxUHasselt',
     author: 'TedX Talks',
     description: 'Anxiety is one of most prevalent mental health disorders, with 1 out of 14 people around the world being likely affected. Leading up to conditions such as depression, increased risk for suicide, disability and requirement of high health services, very few people who often need treatment actually receive it. In her talk “How to cope with anxiety”, Olivia Remes of the University of Cambridge will share her vision on anxiety and will unravel ways to treat and manage this health disorder. ',
     type: 'YouTube',
-    url: 'https://www.youtube.com/embed/WWloIAQpMcQ?si=Kitw8WNaR12Ths3Q'
+    url: 'https://www.youtube.com/embed/WWloIAQpMcQ?si=Kitw8WNaR12Ths3Q',
+    points: 'stressPoints'
 }
 ]
+import React, { useEffect } from 'react';
+import { Box, Container } from '@mui/material';
+import EmergencyButton from '../components/EmergencyButton';
+import ApplicantTable from '../components/ApplicantTable';
 
+
+
+const AdminLandingPage = () => {
+  useEffect(() => {
+    console.log('AdminLandingPage component has been rendered');
+  }, []); // Empty dependency array ensures this runs only on mount
+
+  return (
+    <div>
+      {/* Static Logo in the top left */}
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          // You can add a navigation function here if needed
+        />
+      </Box>
+
+      <Container maxWidth="lg" sx={{ marginTop: '80px' }}>
+        {/* Emergency Button at the top */}
+        <EmergencyButton />
+
+        {/* Applicant Table Section */}
+        <Box sx={{ marginY: 4 }}>
+          <ApplicantTable />
+        </Box>
+      </Container>
+    </div>
+  );
+};
+
+export default AdminLandingPage;
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -1197,7 +1542,7 @@ import {
   Button,
   Grid,
   Paper
-} from '@mui/material';
+} from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -1430,35 +1775,35 @@ const ChatRoom = () => {
       flexDirection: 'column',
     }}>
       <AppBar position="static" sx={{ backgroundColor: '#f1c40f' }}>
-        <Toolbar>
-          {selectedChannel ? (
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="back"
-              sx={{ mr: 2 }}
-              onClick={() => setSelectedChannel(null)}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-          ) : (
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={toggleDrawer(true)}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#000' }}>
-            {selectedChannel || 'Chat Home'}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+  <Toolbar sx={{ justifyContent: 'center', position: 'relative' }}>
+    {selectedChannel ? (
+      <IconButton
+        size="large"
+        edge="start"
+        color="inherit"
+        aria-label="back"
+        sx={{ position: 'absolute', left: 16 }}
+        onClick={() => setSelectedChannel(null)}
+      >
+        <ArrowBackIcon />
+      </IconButton>
+    ) : (
+      <IconButton
+        size="large"
+        edge="start"
+        color="inherit"
+        aria-label="menu"
+        sx={{ position: 'absolute', left: 16 }}
+        onClick={toggleDrawer(true)}
+      >
+        <MenuIcon />
+      </IconButton>
+    )}
+    <Typography variant="h6" component="div" sx={{ color: '#000' }}>
+      {selectedChannel || 'Chat Home'}
+    </Typography>
+  </Toolbar>
+</AppBar>
 
       <Drawer
         anchor="left"
@@ -1543,6 +1888,7 @@ import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Select, MenuItem, InputLabel, FormControl, Container, Typography } from '@mui/material';
 import '../styles/App.css';
 import emailjs from '@emailjs/browser';
+import logo from '../LOGO.png';
 
 const EmergencyContact = () => {
   const [formData, setFormData] = useState({
@@ -1781,7 +2127,10 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Typography, Container, Box } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
-import ApplicantTable from '../components/ApplicantTable';
+//import ApplicantTable from '../components/ApplicantTable';
+
+// Import the logo image
+import logo from '../LOGO.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -1791,38 +2140,58 @@ const LandingPage = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
-      <EmergencyButton />
-      <ApplicantTable />
-      <Typography variant="h2" component="h1" gutterBottom>
-        Welcome to Support App
-      </Typography>
-      <Typography variant="body1" paragraph>
-        Get the support you need, when you need it.
-      </Typography>
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
-        <Button variant="contained" color="primary" component={Link} to="/signin">
-          Sign In
-        </Button>
-        <Button variant="outlined" color="primary" component={Link} to="/register">
-          Sign Up
-        </Button>
+    <div>
+      {/* Static Logo in the top left */}
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
       </Box>
-      <Button 
-        variant="contained" 
-        color="secondary" 
-        onClick={handleQuickAccess}
-        fullWidth
-        sx={{ mt: 2 }}
-      >
-        Quick Access to User Dashboard
-      </Button>
-    </Container>
+
+      <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
+        {/* Emergency Button at the top */}
+        <EmergencyButton />
+
+       
+
+        {/* Welcome and Description Section */}
+        <Typography variant="h2" component="h1" gutterBottom align="center">
+          Welcome to Support App
+        </Typography>
+        <Typography variant="body1" paragraph align="center">
+          Get the support you need, when you need it.
+        </Typography>
+
+        {/* Sign In and Sign Up Buttons */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
+          <Button variant="contained" color="primary" component={Link} to="/signin">
+            Sign In
+          </Button>
+          <Button variant="outlined" color="primary" component={Link} to="/register">
+            Sign Up
+          </Button>
+        </Box>
+
+        {/* Quick Access Button */}
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={handleQuickAccess}
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Quick Access to User Dashboard
+        </Button>
+      </Container>
+    </div>
   );
 };
 
 export default LandingPage;
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cookingList } from '../data/cooking.js';
 import { financialList } from '../data/financial-literacy.js';
 import { stressList } from '../data/stress-management.js';
@@ -1831,7 +2200,31 @@ import LessonDetails from '../components/LessonDetails.js';
 import { Typography } from '@mui/material';
 
 export default function LifeSkills() {
-  const [lessonPlan, setLessonPlan] = useState('Cooking'); // Default is 'Cooking'
+  const [lessonPlan, setLessonPlan] = useState('Cooking');
+  const [points, setPoints] = useState(0);
+  const [mount, setMount] = useState(0);
+
+  // Fetch points when the component mounts or when lessonPlan changes
+  useEffect(() => {
+    async function fetchPoints() {
+      try {
+        // Make a GET request to your API to fetch the user's points
+        const response = await fetch(`http://localhost:8000/api/pointLookup?username=remember`);
+        // console.log(response)
+        const data = await response.json();
+        //console.log("hello")
+        console.log(data.points)
+        console.log(lessonPlan)
+        setPoints(data.points[lessonPlan]); // Assuming your API returns a 'points' field
+        
+        //console.log(points)
+      } catch (error) {
+        console.error('Failed to fetch points:', error);
+      }
+    }
+
+    fetchPoints();
+  }, [lessonPlan, mount]); // The useEffect runs when lessonPlan changes
 
   function handleDropdownChange(event) {
     setLessonPlan(event.target.value);
@@ -1846,6 +2239,8 @@ export default function LifeSkills() {
         </Typography>
       </div>
 
+      
+      
       <h2>Select a Lesson Plan:</h2>
       <select value={lessonPlan} onChange={handleDropdownChange} className="dropdownStyle">
         <option value="Cooking">Cooking</option>
@@ -1853,11 +2248,30 @@ export default function LifeSkills() {
         <option value="StressManagement">Stress Management</option>
         <option value="CareerReadiness">Career Readiness</option>
       </select>
+      
+      {lessonPlan === 'Cooking' &&
+        <div><progress value={points} max={cookingList.length} className='progress'>70 %</progress></div>
+      }
+      {lessonPlan === 'FinancialLiteracy' &&
+        <div><progress value={points} max={financialList.length} className='progress'>70 %</progress></div>
+      }
+      {lessonPlan === 'StressManagement' &&
+        <div><progress value={points} max={stressList.length} className='progress'>70 %</progress></div>
+      }
+      {lessonPlan === 'CareerReadiness' &&
+        <div><progress value={points} max={careerList.length} className='progress'>70 %</progress></div>
+      }
 
       {lessonPlan === 'Cooking' && (
         <div className="timeline">
           {cookingList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
@@ -1865,26 +2279,45 @@ export default function LifeSkills() {
       {lessonPlan === 'FinancialLiteracy' && (
         <div className="timeline">
           {financialList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
-
       {lessonPlan === 'StressManagement' && (
         <div className="timeline">
           {stressList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
-
       {lessonPlan === 'CareerReadiness' && (
         <div className="timeline">
           {careerList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
+      
+
+
     </div>
   );
 }
@@ -2104,8 +2537,9 @@ const MenteeApply = () => {
 };
 
 export default MenteeApply;
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Button, Typography, Container, Box, Grid } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const MentorApply = () => {
   const [formData, setFormData] = useState({
@@ -2122,6 +2556,17 @@ const MentorApply = () => {
 
   const [isReasonOverLimit, setIsReasonOverLimit] = useState(false);
   const [isMenteeAttributesOverLimit, setIsMenteeAttributesOverLimit] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isSubmitted) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitted, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -2155,7 +2600,7 @@ const MentorApply = () => {
     e.preventDefault();
     if (!isReasonOverLimit && !isMenteeAttributesOverLimit) {
       console.log(formData);
-      alert('Application Submitted!');
+      setIsSubmitted(true);
     } else {
       alert('Please reduce the character count in the fields to below 300 characters.');
     }
@@ -2163,158 +2608,166 @@ const MentorApply = () => {
 
   return (
     <Container maxWidth="md" sx={{ marginTop: '50px' }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Mentor Application
-      </Typography>
-      <Typography variant="body1" paragraph>
-        Please fill out the form below and upload your resume to apply as a mentor. 
-        This form helps us match you with mentees who will benefit the most from your expertise.
-      </Typography>
+      {isSubmitted ? (
+        <Typography variant="h4" component="h1" gutterBottom>
+          We've received your application.
+        </Typography>
+      ) : (
+        <>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Mentor Application
+          </Typography>
+          <Typography variant="body1" paragraph>
+            Please fill out the form below and upload your resume to apply as a mentor. 
+            This form helps us match you with mentees who will benefit the most from your expertise.
+          </Typography>
 
-      <Box component="form" onSubmit={handleSubmit}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="First Name"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="Last Name"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="Phone Number"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="Occupation"
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              required
-              fullWidth
-              label="Years of Experience"
-              name="experience"
-              value={formData.experience}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              required
-              fullWidth
-              multiline
-              rows={2}
-              label="Why do you want to be a mentor?"
-              name="reason"
-              value={formData.reason}
-              onChange={handleChange}
-              helperText={`${formData.reason.length}/300`}
-              error={isReasonOverLimit}
-              InputProps={{
-                style: {
-                  borderColor: isReasonOverLimit ? 'red' : undefined,
-                }
-              }}
-              FormHelperTextProps={{
-                style: {
-                  color: isReasonOverLimit ? 'red' : undefined,
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              label="What qualities do you look for in a mentee?"
-              name="preferredMenteeAttributes"
-              value={formData.preferredMenteeAttributes}
-              onChange={handleChange}
-              helperText={`${formData.preferredMenteeAttributes.length}/300`}
-              error={isMenteeAttributesOverLimit}
-              InputProps={{
-                style: {
-                  borderColor: isMenteeAttributesOverLimit ? 'red' : undefined,
-                }
-              }}
-              FormHelperTextProps={{
-                style: {
-                  color: isMenteeAttributesOverLimit ? 'red' : undefined,
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              component="label"
-              fullWidth
-            >
-              Upload Resume
-              <input
-                type="file"
-                hidden
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
-              />
-            </Button>
-            {formData.file && (
-              <Typography variant="body2" sx={{ marginTop: '10px' }}>
-                Uploaded File: {formData.file.name}
-              </Typography>
-            )}
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={isReasonOverLimit || isMenteeAttributesOverLimit}
-            >
-              Submit Application
-            </Button>
-          </Grid>
-        </Grid>
-      </Box>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Phone Number"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Occupation"
+                  name="occupation"
+                  value={formData.occupation}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Years of Experience"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="Why do you want to be a mentor?"
+                  name="reason"
+                  value={formData.reason}
+                  onChange={handleChange}
+                  helperText={`${formData.reason.length}/300`}
+                  error={isReasonOverLimit}
+                  InputProps={{
+                    style: {
+                      borderColor: isReasonOverLimit ? 'red' : undefined,
+                    }
+                  }}
+                  FormHelperTextProps={{
+                    style: {
+                      color: isReasonOverLimit ? 'red' : undefined,
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="What qualities do you look for in a mentee?"
+                  name="preferredMenteeAttributes"
+                  value={formData.preferredMenteeAttributes}
+                  onChange={handleChange}
+                  helperText={`${formData.preferredMenteeAttributes.length}/300`}
+                  error={isMenteeAttributesOverLimit}
+                  InputProps={{
+                    style: {
+                      borderColor: isMenteeAttributesOverLimit ? 'red' : undefined,
+                    }
+                  }}
+                  FormHelperTextProps={{
+                    style: {
+                      color: isMenteeAttributesOverLimit ? 'red' : undefined,
+                    }
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  component="label"
+                  fullWidth
+                >
+                  Upload Resume
+                  <input
+                    type="file"
+                    hidden
+                    onChange={handleFileChange}
+                    accept=".pdf,.doc,.docx"
+                  />
+                </Button>
+                {formData.file && (
+                  <Typography variant="body2" sx={{ marginTop: '10px' }}>
+                    Uploaded File: {formData.file.name}
+                  </Typography>
+                )}
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  disabled={isReasonOverLimit || isMenteeAttributesOverLimit}
+                >
+                  Submit Application
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </>
+      )}
     </Container>
   );
 };
@@ -2324,6 +2777,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography, Box } from '@mui/material';
 import '../styles/App.css';
+import emailjs from '@emailjs/browser';
+import { useRef } from 'react';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -2337,12 +2792,35 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  const form = useRef(); // Reference for the form
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+  };
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+    emailjs
+    .sendForm(
+      process.env.REACT_APP_EMAILJS_SERVICE_ID,
+      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+      form.current,
+      process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+    )
+    .then(
+        () => {
+          console.log('SUCCESS!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('FAILED...', error.text);
+          alert('Email sending failed...');
+        },
+      );
   };
 
   const handleSubmit = async (e) => {
@@ -2353,6 +2831,9 @@ const Register = () => {
       setError('Passwords do not match!');
       return;
     }
+     // Call sendEmail after form validation
+    sendEmail(e);
+    alert('Registration Submitted!');
 
     const data = {
       name: formData.username, // Using username as name for now
@@ -2402,7 +2883,7 @@ const Register = () => {
         <Typography component="h1" variant="h5">
           Register
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} ref={form} sx={{ mt: 1 }}>
           <TextField
             margin="normal"
             required
@@ -2472,7 +2953,10 @@ const Register = () => {
 export default Register;
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
+import EmergencyButton from '../components/EmergencyButton';
 import '../styles/App.css';
+import logo from "../LOGO.png"
 
 const Logon = () => {
   const [formData, setFormData] = useState({
@@ -2505,7 +2989,7 @@ const Logon = () => {
       const result = await response.json();
 
       if (response.ok) {
-        alert('Login Successful!');
+      
         // Redirect to UserLandingPage
         navigate('/dashboard');
       } else {
@@ -2518,6 +3002,7 @@ const Logon = () => {
   };
 
   return (
+    
     <div style={{ 
       maxWidth: '800px', 
       margin: '50px auto', // Center the form and push it down
@@ -2526,6 +3011,16 @@ const Logon = () => {
       flexDirection: 'column',
       alignItems: 'center' // Center items within the container
     }}>
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
+      </Box>
+      {/* Emergency Button at the top */}
+      <EmergencyButton />
       <h2 style={{ fontSize: '26px' }}>Log in</h2>
       <form onSubmit={handleSubmit} style={{ width: '100%' }}>
         <div style={{ marginBottom: '20px', width: '100%' }}>
@@ -2584,8 +3079,14 @@ const Logon = () => {
 };
 
 export default Logon;
-import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import EmergencyButton from '../components/EmergencyButton';
+import ApplicantTable from '../components/ApplicantTable';
+
+
+
+import logo from "../LOGO.png"
 import { 
   Container, 
   Grid, 
@@ -2602,24 +3103,25 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Link
 } from '@mui/material';
 import { 
   Event as EventIcon, 
   Phone as PhoneIcon, 
   Email as EmailIcon,
   Edit as EditIcon,
-  Settings as SettingsIcon // Import Settings Icon
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 
 const UserLandingPage = () => {
   const navigate = useNavigate();
   const [mentorName, setMentorName] = useState("Sarah Johnson");
   const [totalPoints, setTotalPoints] = useState(300);
-  const [displayedPoints, setDisplayedPoints] = useState(0); // For animation
+  const [displayedPoints, setDisplayedPoints] = useState(0);
   const [events, setEvents] = useState([
-    { date: "2024-10-18", title: "Meeting with Mentor" },
-    { date: "2024-10-20", title: "Community Volunteering" },
+    { date: "2024-10-20", title: "Meeting with Mentor" },
+    { date: "2024-10-22", title: "Community Volunteering" },
     { date: "2024-10-25", title: "Career Workshop" },
   ]);
   const [quickContacts, setQuickContacts] = useState([
@@ -2630,12 +3132,44 @@ const UserLandingPage = () => {
 
   // Profile Settings Dialog State
   const [openProfileSettingsDialog, setOpenProfileSettingsDialog] = useState(false);
-  const [email, setEmail] = useState("mentor@example.com");
-  const [location, setLocation] = useState("New York");
+  const [email, setEmail] = useState("user@example.com");
+  const [location, setLocation] = useState("South Dallas");
 
   // Edit Contacts Dialog State
   const [openEditContactsDialog, setOpenEditContactsDialog] = useState(false);
   const [editedContacts, setEditedContacts] = useState(quickContacts);
+
+  // Points Redemption Dialog State
+  const [openRedeemPointsDialog, setOpenRedeemPointsDialog] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
+
+  const rewardOptions = [
+    { points: 100, description: "$10 Cash Incentive" },
+    { points: 200, description: "$20 Food Stamp Voucher" },
+    { points: 150, description: "Voucher for Local South Dallas Restaurant" },
+    { points: 50, description: "Grocery Voucher for Local South Dallas Store" },
+    { points: 75, description: "Fresh Produce Box from Local Farm" }
+  ];
+
+  useEffect(() => {
+    let start = 0;
+    const end = totalPoints;
+    if (start === end) return;
+
+    let incrementTime = 10;
+    const step = Math.ceil(end / 100);
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayedPoints(start);
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [totalPoints]);
 
   const handleOpenProfileSettingsDialog = () => {
     setOpenProfileSettingsDialog(true);
@@ -2643,7 +3177,6 @@ const UserLandingPage = () => {
 
   const handleCloseProfileSettingsDialog = () => {
     setOpenProfileSettingsDialog(false);
-    // Reset the form fields if needed
   };
 
   const handleSaveProfileSettings = () => {
@@ -2670,32 +3203,43 @@ const UserLandingPage = () => {
     setEditedContacts(updatedContacts);
   };
 
-  // Animate the points value
-  useEffect(() => {
-    let start = 0;
-    const end = totalPoints;
-    if (start === end) return;
+  const handleOpenRedeemPointsDialog = () => {
+    setOpenRedeemPointsDialog(true);
+  };
 
-    let incrementTime = 10; // in ms, change this to adjust speed
-    const step = Math.ceil(end / 100);
+  const handleCloseRedeemPointsDialog = () => {
+    setOpenRedeemPointsDialog(false);
+    setSelectedReward(null);
+  };
 
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= end) {
-        start = end;
-        clearInterval(timer);
-      }
-      setDisplayedPoints(start);
-    }, incrementTime);
-
-    return () => clearInterval(timer);
-  }, [totalPoints]);
+  const handleRedeemPoints = () => {
+    if (selectedReward && totalPoints >= selectedReward.points) {
+      setTotalPoints(totalPoints - selectedReward.points);
+      // Here you would typically call an API to process the redemption
+      alert(`You have redeemed ${selectedReward.points} points for ${selectedReward.description}. It has been sent to your email`);
+      handleCloseRedeemPointsDialog();
+    } else {
+      alert("You don't have enough points for this reward.");
+    }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Emergency Button at the top */}
+      <EmergencyButton />
+
+      {/* Static Logo in the top left */}
+      <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
+        <img 
+          src={logo} 
+          alt="Support App Logo" 
+          style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
+      </Box>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
-          <SettingsIcon /> {/* Settings Icon for Profile */}
+          <SettingsIcon />
         </IconButton>
       </Box>
       <Grid container spacing={3}>
@@ -2721,6 +3265,14 @@ const UserLandingPage = () => {
             <Typography component="p" variant="h4">
               Total Points: {displayedPoints}
             </Typography>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={handleOpenRedeemPointsDialog}
+              sx={{ alignSelf: 'flex-start', mt: 1 }}
+            >
+              Redeem Points
+            </Link>
           </Paper>
         </Grid>
         
@@ -2814,7 +3366,6 @@ const UserLandingPage = () => {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
-          {/* Add more fields as necessary */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfileSettingsDialog} color="primary">Cancel</Button>
@@ -2852,6 +3403,37 @@ const UserLandingPage = () => {
           <Button onClick={handleSaveEditedContacts} color="primary">Save</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Redeem Points Dialog */}
+      <Dialog open={openRedeemPointsDialog} onClose={handleCloseRedeemPointsDialog}>
+        <DialogTitle>Redeem Your Points</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            You have {totalPoints} points available to redeem.
+          </Typography>
+          <List>
+            {rewardOptions.map((option, index) => (
+              <ListItem
+                key={index}
+                button
+                selected={selectedReward === option}
+                onClick={() => setSelectedReward(option)}
+              >
+                <ListItemText 
+                  primary={option.description} 
+                  secondary={`${option.points} points`} 
+                />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRedeemPointsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleRedeemPoints} color="primary" disabled={!selectedReward}>
+            Redeem
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
@@ -2875,6 +3457,8 @@ import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
+import MentorApply from './pages/MentorApply';
+import MenteeApply from './pages/MenteeApply';
 import Navbar from './components/Navbar';
 import PopupChat from './components/PopupChat'; // Import the new PopupChat component
 import './styles/App.css';
@@ -2904,6 +3488,8 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dashboard" element={<UserLandingPage />} />
+          <Route path="/mentorapply" element={<MentorApply />} />
+          <Route path="/menteeapply" element={<MenteeApply />} />
         </Routes>
         <Navbar />
         <PopupChat messages={chatMessages} onSendMessage={handleSendMessage} />
