@@ -15,7 +15,7 @@ import {
   Button,
   Grid,
   Paper
-} from '@mui/material';
+} from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';

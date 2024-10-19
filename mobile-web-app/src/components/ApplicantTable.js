@@ -39,6 +39,32 @@ const ApplicantTable = () => {
         role: 'Mentee',
         file: null,
       },
+      {
+        _id: '3',
+        firstName: 'Alice',
+        lastName: 'Johnson',
+        email: 'alice.johnson@example.com',
+        phone: '555-123-4567',
+        occupation: 'Developer',
+        experience: 4,
+        reason: 'Interested in sharing knowledge.',
+        preferredMenteeAttributes: 'Motivated and curious',
+        role: 'Mentor',
+        file: null,
+      },
+      {
+        _id: '4',
+        firstName: 'Bob',
+        lastName: 'Brown',
+        email: 'bob.brown@example.com',
+        phone: '555-987-6543',
+        occupation: 'Product Manager',
+        experience: 6,
+        reason: 'Looking to guide someone in product development.',
+        preferredMenteeAttributes: 'Passionate about learning',
+        role: 'Mentor',
+        file: null,
+      }
     ];
 
     setApplicants(sampleApplicants);
@@ -59,7 +85,7 @@ const ApplicantTable = () => {
       console.log("MATCHED DETECTED");
       setTimeout(() => {
         sendEmail(applicantId);
-      }, 0); // Ensure state is updated before sending email
+      }, 0); 
     }
   };
 
@@ -107,12 +133,17 @@ const ApplicantTable = () => {
         console.log('Email sent successfully!', response.status, response.text);
         setEmailStatusMessage('Notified User of Match!');
         setEmailDialogOpen(true);
+        removeApplicant(applicantId);
       })
       .catch((error) => {
         console.error('Failed to send email.', error);
         setEmailStatusMessage('Failed to send email. Please try again.');
         setEmailDialogOpen(true);
       });
+  };
+
+  const removeApplicant = (applicantId) => {
+    setApplicants((prevApplicants) => prevApplicants.filter((applicant) => applicant._id !== applicantId));
   };
 
   return (
