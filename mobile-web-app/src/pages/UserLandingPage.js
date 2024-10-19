@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Container, 
   Grid, 
@@ -16,24 +16,25 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Link
 } from '@mui/material';
 import { 
   Event as EventIcon, 
   Phone as PhoneIcon, 
   Email as EmailIcon,
   Edit as EditIcon,
-  Settings as SettingsIcon // Import Settings Icon
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 
 const UserLandingPage = () => {
   const navigate = useNavigate();
   const [mentorName, setMentorName] = useState("Sarah Johnson");
   const [totalPoints, setTotalPoints] = useState(300);
-  const [displayedPoints, setDisplayedPoints] = useState(0); // For animation
+  const [displayedPoints, setDisplayedPoints] = useState(0);
   const [events, setEvents] = useState([
-    { date: "2024-10-18", title: "Meeting with Mentor" },
-    { date: "2024-10-20", title: "Community Volunteering" },
+    { date: "2024-10-20", title: "Meeting with Mentor" },
+    { date: "2024-10-22", title: "Community Volunteering" },
     { date: "2024-10-25", title: "Career Workshop" },
   ]);
   const [quickContacts, setQuickContacts] = useState([
@@ -44,12 +45,44 @@ const UserLandingPage = () => {
 
   // Profile Settings Dialog State
   const [openProfileSettingsDialog, setOpenProfileSettingsDialog] = useState(false);
-  const [email, setEmail] = useState("mentor@example.com");
-  const [location, setLocation] = useState("New York");
+  const [email, setEmail] = useState("user@example.com");
+  const [location, setLocation] = useState("South Dallas");
 
   // Edit Contacts Dialog State
   const [openEditContactsDialog, setOpenEditContactsDialog] = useState(false);
   const [editedContacts, setEditedContacts] = useState(quickContacts);
+
+  // Points Redemption Dialog State
+  const [openRedeemPointsDialog, setOpenRedeemPointsDialog] = useState(false);
+  const [selectedReward, setSelectedReward] = useState(null);
+
+  const rewardOptions = [
+    { points: 100, description: "$10 Cash Incentive" },
+    { points: 200, description: "$20 Food Stamp Voucher" },
+    { points: 150, description: "Voucher for Local South Dallas Restaurant" },
+    { points: 50, description: "Grocery Voucher for Local South Dallas Store" },
+    { points: 75, description: "Fresh Produce Box from Local Farm" }
+  ];
+
+  useEffect(() => {
+    let start = 0;
+    const end = totalPoints;
+    if (start === end) return;
+
+    let incrementTime = 10;
+    const step = Math.ceil(end / 100);
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayedPoints(start);
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [totalPoints]);
 
   const handleOpenProfileSettingsDialog = () => {
     setOpenProfileSettingsDialog(true);
@@ -57,7 +90,6 @@ const UserLandingPage = () => {
 
   const handleCloseProfileSettingsDialog = () => {
     setOpenProfileSettingsDialog(false);
-    // Reset the form fields if needed
   };
 
   const handleSaveProfileSettings = () => {
@@ -84,32 +116,31 @@ const UserLandingPage = () => {
     setEditedContacts(updatedContacts);
   };
 
-  // Animate the points value
-  useEffect(() => {
-    let start = 0;
-    const end = totalPoints;
-    if (start === end) return;
+  const handleOpenRedeemPointsDialog = () => {
+    setOpenRedeemPointsDialog(true);
+  };
 
-    let incrementTime = 10; // in ms, change this to adjust speed
-    const step = Math.ceil(end / 100);
+  const handleCloseRedeemPointsDialog = () => {
+    setOpenRedeemPointsDialog(false);
+    setSelectedReward(null);
+  };
 
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= end) {
-        start = end;
-        clearInterval(timer);
-      }
-      setDisplayedPoints(start);
-    }, incrementTime);
-
-    return () => clearInterval(timer);
-  }, [totalPoints]);
+  const handleRedeemPoints = () => {
+    if (selectedReward && totalPoints >= selectedReward.points) {
+      setTotalPoints(totalPoints - selectedReward.points);
+      // Here you would typically call an API to process the redemption
+      alert(`You have redeemed ${selectedReward.points} points for ${selectedReward.description}`);
+      handleCloseRedeemPointsDialog();
+    } else {
+      alert("You don't have enough points for this reward.");
+    }
+  };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
-          <SettingsIcon /> {/* Settings Icon for Profile */}
+          <SettingsIcon />
         </IconButton>
       </Box>
       <Grid container spacing={3}>
@@ -135,6 +166,14 @@ const UserLandingPage = () => {
             <Typography component="p" variant="h4">
               Total Points: {displayedPoints}
             </Typography>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={handleOpenRedeemPointsDialog}
+              sx={{ alignSelf: 'flex-start', mt: 1 }}
+            >
+              Redeem Points
+            </Link>
           </Paper>
         </Grid>
         
@@ -228,7 +267,6 @@ const UserLandingPage = () => {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
-          {/* Add more fields as necessary */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProfileSettingsDialog} color="primary">Cancel</Button>
@@ -264,6 +302,37 @@ const UserLandingPage = () => {
         <DialogActions>
           <Button onClick={handleCloseEditContactsDialog} color="primary">Cancel</Button>
           <Button onClick={handleSaveEditedContacts} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Redeem Points Dialog */}
+      <Dialog open={openRedeemPointsDialog} onClose={handleCloseRedeemPointsDialog}>
+        <DialogTitle>Redeem Your Points</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>
+            You have {totalPoints} points available to redeem.
+          </Typography>
+          <List>
+            {rewardOptions.map((option, index) => (
+              <ListItem
+                key={index}
+                button
+                selected={selectedReward === option}
+                onClick={() => setSelectedReward(option)}
+              >
+                <ListItemText 
+                  primary={option.description} 
+                  secondary={`${option.points} points`} 
+                />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRedeemPointsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleRedeemPoints} color="primary" disabled={!selectedReward}>
+            Redeem
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
