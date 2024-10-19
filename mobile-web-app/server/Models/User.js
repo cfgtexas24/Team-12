@@ -1,10 +1,5 @@
 const mongoose = require('mongoose');
-
-const UserType = Object.freeze({
-  ADMIN: 0,
-  MENTOR: 1,
-  MENTEE: 2,
-});
+const UserType = require('./UserType');
 
 const userSchema = new mongoose.Schema({
   user_id: {
@@ -35,6 +30,4 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = {
-  User,
-};
+module.exports = User;
