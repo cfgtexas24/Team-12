@@ -86,26 +86,45 @@ export default function LifeSkills() {
       {lessonPlan === 'FinancialLiteracy' && (
         <div className="timeline">
           {financialList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
-
       {lessonPlan === 'StressManagement' && (
         <div className="timeline">
           {stressList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
-
       {lessonPlan === 'CareerReadiness' && (
         <div className="timeline">
           {careerList.map((lesson, idx) => (
-            <LessonDetails key={idx} lesson={lesson} />
+            <LessonDetails 
+              key={idx} 
+              setMount={setMount}
+              mount={mount}
+              lesson={lesson} 
+              showDetails={idx < points} // Set showDetails to true if idx is less than or equal to points
+            />
           ))}
         </div>
       )}
+      
+
+
     </div>
   );
 }

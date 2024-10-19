@@ -16,7 +16,9 @@ export default function Gallery({ lesson, showDetails, mount, setMount }) {
 async function handleMoreClick() {
   try {
     // Make a GET request to your API to fetch the user's points
-    const response = await fetch(`http://localhost:8000/api/pointLookupAdd?username=remember`, {
+    console.log(lesson.points)
+    console.log("here")
+    const response = await fetch(`http://localhost:8000/api/pointLookupAdd?username=remember&lesson=${lesson.points}`, {
         method: 'POST'
     });
     setMount(mount+1)
