@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
 import Register from './pages/Register';
 import ChatRoom from './pages/ChatRoom';
+import UserLandingPage from './pages/UserLandingPage'
 import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
@@ -24,6 +25,7 @@ function App() {
           <Route path="/lifeskills" element={<LifeSkills />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/dashboard" element={<UserLandingPage />} />
         </Routes>
         <Navbar />
       </div>
