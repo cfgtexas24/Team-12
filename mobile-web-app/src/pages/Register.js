@@ -21,7 +21,6 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     alert('Login Submitted!');
-    
   };
 
   return (
