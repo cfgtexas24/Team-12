@@ -39,6 +39,32 @@ const ApplicantTable = () => {
         role: 'Mentee',
         file: null,
       },
+      {
+        _id: '3',
+        firstName: 'Alice',
+        lastName: 'Johnson',
+        email: 'alice.johnson@example.com',
+        phone: '555-123-4567',
+        occupation: 'Developer',
+        experience: 4,
+        reason: 'Interested in sharing knowledge.',
+        preferredMenteeAttributes: 'Motivated and curious',
+        role: 'Mentor',
+        file: null,
+      },
+      {
+        _id: '4',
+        firstName: 'Bob',
+        lastName: 'Brown',
+        email: 'bob.brown@example.com',
+        phone: '555-987-6543',
+        occupation: 'Product Manager',
+        experience: 6,
+        reason: 'Looking to guide someone in product development.',
+        preferredMenteeAttributes: 'Passionate about learning',
+        role: 'Mentor',
+        file: null,
+      }
     ];
 
     setApplicants(sampleApplicants);
