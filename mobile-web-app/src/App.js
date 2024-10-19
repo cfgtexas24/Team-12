@@ -4,15 +4,16 @@ import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
 import Register from './pages/Register';
 import ChatRoom from './pages/ChatRoom';
-import UserLandingPage from './pages/UserLandingPage'
+import UserLandingPage from './pages/UserLandingPage';
 import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
 import MentorApply from './pages/MentorApply';
 import MenteeApply from './pages/MenteeApply';
+import AdminLandingPage from './pages/AdminLandingPage'; // Update this import
 import Navbar from './components/Navbar';
-import PopupChat from './components/PopupChat'; // Import the new PopupChat component
+import PopupChat from './components/PopupChat';
 import './styles/App.css';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
           <Route path="/dashboard" element={<UserLandingPage />} />
           <Route path="/mentorapply" element={<MentorApply />} />
           <Route path="/menteeapply" element={<MenteeApply />} />
+          <Route path="/admin" element={<AdminLandingPage />} /> {/* Make sure this line is present */}
         </Routes>
         <Navbar />
         <PopupChat messages={chatMessages} onSendMessage={handleSendMessage} />

@@ -2,9 +2,6 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Typography, Container, Box } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
-import ApplicantTable from '../components/ApplicantTable';
-
-// Import the logo image
 import logo from '../LOGO.png';
 
 const LandingPage = () => {
@@ -12,6 +9,10 @@ const LandingPage = () => {
 
   const handleQuickAccess = () => {
     navigate('/dashboard');
+  };
+
+  const handleAdminAccess = () => {
+    navigate('/admin');
   };
 
   return (
@@ -29,11 +30,6 @@ const LandingPage = () => {
       <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
         {/* Emergency Button at the top */}
         <EmergencyButton />
-
-        {/* Applicant Table Section */}
-        <Box sx={{ marginY: 4 }}>
-          <ApplicantTable />
-        </Box>
 
         {/* Welcome and Description Section */}
         <Typography variant="h2" component="h1" gutterBottom align="center">
@@ -62,6 +58,17 @@ const LandingPage = () => {
           sx={{ mt: 2 }}
         >
           Quick Access to User Dashboard
+        </Button>
+
+        {/* New Admin Access Button */}
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleAdminAccess}
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Admin Access
         </Button>
       </Container>
     </div>
