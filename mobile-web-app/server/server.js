@@ -33,7 +33,7 @@ mongoose.connect(MONGODB_URI, {
   process.exit(1);
 });
 
-// Routes
+
 app.use('/api', userRoutes);
 
 // Start server

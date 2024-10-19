@@ -14,7 +14,7 @@ const signup = async (req, res) => {
     }
 
     // Validate user_type
-    if (![0, 1, 2].includes(user_type)) {
+    if (![UserType.ADMIN, UserType.MENTOR, UserType.MENTEE].includes(user_type)) {
       return res.status(400).json({ error: 'Invalid user type' });
     }
 
@@ -45,6 +45,33 @@ const signup = async (req, res) => {
   }
 };
 
+const getusers = async (req, res) => {
+  try {
+    const data = await User.find(); 
+    res.status(200).json(data.map(user => ({
+      Name: user.name,
+      Username: user.username
+      
+    }))); 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getuser = async (req, res) => {
+
+  const username = await req.params.username
+
+  try {
+    const data = await User.findOne( {username} ); 
+    res.status(200).json(data); 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   signup,
+  getusers,
+  getuser
 };
