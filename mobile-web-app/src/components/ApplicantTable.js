@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import emailjs from '@emailjs/browser';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 const ApplicantTable = () => {
   const [applicants, setApplicants] = useState([]);
   const [statuses, setStatuses] = useState({});
   const [expandedRows, setExpandedRows] = useState({});
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailStatusMessage, setEmailStatusMessage] = useState('');
   const form = useRef();
 
   useEffect(() => {
@@ -15,7 +17,7 @@ const ApplicantTable = () => {
         _id: '1',
         firstName: 'John',
         lastName: 'Doe',
-        email: 'cathyhou@college.harvard.edu',
+        email: 'john.doe@example.com',
         phone: '123-456-7890',
         occupation: 'Engineer',
         experience: 5,
@@ -103,9 +105,13 @@ const ApplicantTable = () => {
       )
       .then((response) => {
         console.log('Email sent successfully!', response.status, response.text);
+        setEmailStatusMessage('Notified User of Match!');
+        setEmailDialogOpen(true);
       })
       .catch((error) => {
         console.error('Failed to send email.', error);
+        setEmailStatusMessage('Failed to send email. Please try again.');
+        setEmailDialogOpen(true);
       });
   };
 
@@ -173,6 +179,17 @@ const ApplicantTable = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+        <DialogTitle>Email Status</DialogTitle>
+        <DialogContent>
+          <Typography>{emailStatusMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEmailDialogOpen(false)} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
