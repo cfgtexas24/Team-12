@@ -8,6 +8,22 @@ export const cookingList = [
     points: 'cookingPoints'
   },
   {
+    title: '10 Cooking Hacks You Wish You Knew Sooner',
+    author: 'BuzzFeed Nifty',
+    description: 'Quick cooking hacks to make your life easier in the kitchen.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5',
+    points: 'cookingPoints'
+  },
+  {
+    title: 'How to Boil Pasta',
+    author: 'The Cooking Corner',
+    description: 'Perfect guide to getting your pasta just right.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z',
+    points: 'cookingPoints'
+  },
+  {
     title: 'Chicken Quesadilla',
     author: 'Marta Colvin Andrade',
     description: 'A recipe for a healthy chicken quesadilla using corn and zucchini.',
@@ -30,21 +46,7 @@ export const cookingList = [
     type: 'YouTube',
     url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF',
     points: 'cookingPoints'
-  },
-  {
-    title: 'How to boil pasta',
-    author: 'The Cooking Corner',
-    description: 'Perfect guide to getting your pasta just right.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z',
-    points: 'cookingPoints'
-  },
-  {
-    title: '10 Cooking Hacks You Wish You Knew Sooner',
-    author: 'BuzzFeed Nifty',
-    description: 'Quick cooking hacks to make your life easier in the kitchen.',
-    type: 'YouTube',
-    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5',
-    points: 'cookingPoints'
   }
+  
+  
 ];
