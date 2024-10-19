@@ -9,7 +9,6 @@ const EmergencyBanner = () => {
     <Button
       variant="contained"
       color="error"
-      startIcon={<Error />}
       component={Link}
       to="/emergency"
       sx={{
@@ -17,7 +16,7 @@ const EmergencyBanner = () => {
         top: 0,
         left: 0,
         width: '100%',
-        backgroundColor: 'var(--color-secondary)', 
+        backgroundColor: 'red', 
         color: 'var(--color-secondary)', 
         padding: '15px 0',
         fontSize: '18px',
