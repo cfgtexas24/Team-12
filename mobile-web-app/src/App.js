@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
-import Register from './pages/Register'
+import Register from './pages/Register';
 import ChatRoom from './pages/ChatRoom';
 import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
