@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import '../styles/App.css'
-import { redirect } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
+import '../styles/App.css';
+import emailjs from '@emailjs/browser';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +10,8 @@ const Register = () => {
     confirmPassword: '',
   });
 
+  const form = useRef(); // Reference for the form
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -18,15 +20,41 @@ const Register = () => {
     });
   };
 
+  const sendEmail = (e) => {
+    e.preventDefault();
+
+    emailjs
+      .sendForm('service_qwldh6a', 'template_69dyt8s', form.current, 'R9l7MXFYm80zeutcc')
+      .then(
+        () => {
+          console.log('SUCCESS!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('FAILED...', error.text);
+          alert('Email sending failed...');
+        },
+      );
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Login Submitted!');
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+
+    // Call sendEmail after form validation
+    sendEmail(e);
+    alert('Registration Submitted!');
   };
 
   return (
     <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
       <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
+      <form ref={form} onSubmit={handleSubmit}>
         <div style={{ marginBottom: '10px' }}>
           <label>Username:</label>
           <input
