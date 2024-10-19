@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Select, MenuItem, InputLabel, FormControl, Container, Typography } from '@mui/material';
 import '../styles/App.css';
+import emailjs from '@emailjs/browser';
 
 const EmergencyContact = () => {
   const [formData, setFormData] = useState({
@@ -14,41 +15,93 @@ const EmergencyContact = () => {
     otherCategory: '',
   });
 
+  const form = useRef();
+
   const [errors, setErrors] = useState({
     phone: '',
   });
 
-  const navigate = useNavigate(); 
-
   const handleChange = (event) => {
-    const { name, value } = event.target;
+  const { name, value } = event.target;
 
-    if (name === 'phone') {
-      const phoneRegex = /^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$/; 
-      if (!phoneRegex.test(value)) {
-        setErrors((prevErrors) => ({ ...prevErrors, phone: 'Invalid phone number' }));
+  // validate phone number
+  if (name === 'phone') {
+    const phoneRegex = /^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$/; 
+    if (!phoneRegex.test(value)) {
+      setErrors((prevErrors) => ({ ...prevErrors, phone: 'Invalid phone number' }));
+    } else {
+      setErrors((prevErrors) => ({ ...prevErrors, phone: '' }));
+    }
+  }
+
+  setFormData((prevFormData) => {
+    let updatedUrgency = prevFormData.urgency;
+
+    // Update urgency based on category
+    if (name === 'category') {
+      if (value === 'unaccompanied_minor' || value === 'housing') {
+        updatedUrgency = 'URGENT';
       } else {
-        setErrors((prevErrors) => ({ ...prevErrors, phone: '' }));
+        updatedUrgency = 'moderate';
       }
     }
 
-    setFormData({
-      ...formData,
+    return {
+      ...prevFormData,
       [name]: value,
+      urgency: updatedUrgency, // Set urgency accordingly
+    };
+  });
+  };
+
+
+  const sendEmail = (emailData) => {
+    console.log("%s", process.env.REACT_APP_EMAILJS_SERVICE_ID);
+    console.log("%s", process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+    emailjs
+      .send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        emailData,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+      )
+      .then(
+        () => {
+          console.log('SUCCESS!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('FAILED...', error);
+          alert('Email sending failed...');
+        }
+      );
+  };
+  
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-  };
+    console.log('Current Date:', currentDate);
+    const emailData = {
+      to_name: formData.email,  
+      from_name: `${formData.first_name} ${formData.last_name}`, 
+      service_type: formData.category, 
+      urgency: formData.category === 'unaccompanied_minor' || formData.category === 'housing' ? 'URGENT' : 'moderate',
+      date: currentDate,  
+      message: formData.message,  
+    };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    if (!errors.phone) {
-      console.log(formData);
-      // Navigate to confirmation page
-      navigate('/confirmation');
-    } else {
-      alert('Please fix the errors before submitting');
-    }
-  };
+    console.log('Form Data:', emailData);
 
+    sendEmail(emailData);
+    alert('Registration Submitted!');
+  };
+  
   return (
     <Container
       maxWidth="sm"
@@ -61,7 +114,7 @@ const EmergencyContact = () => {
         Please fill out your emergency message and select the relevant category.
       </Typography>
 
-      <form onSubmit={handleSubmit}>
+      <form ref={form} onSubmit={handleSubmit}>
         {/* First Name Input */}
         <TextField
           label="First Name"
