@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -9,7 +10,8 @@ import {
   ListItemText, 
   ListItemIcon,
   IconButton,
-  Box
+  Box,
+  Button
 } from '@mui/material';
 import { 
   Event as EventIcon, 
@@ -19,6 +21,7 @@ import {
 } from '@mui/icons-material';
 
 const UserLandingPage = () => {
+  const navigate = useNavigate();
   const [mentorName, setMentorName] = useState("Sarah Johnson");
   const [totalPoints, setTotalPoints] = useState(300);
   const [displayedPoints, setDisplayedPoints] = useState(0); // For animation
@@ -143,6 +146,14 @@ const UserLandingPage = () => {
                 </Grid>
               ))}
             </Grid>
+            <Box display="flex" justifyContent="center" mt={2}>
+            <Button variant="contained" color="primary" sx={{ mr: 2 }} onClick={() => navigate('/mentorapply')}>
+                Apply to be a Mentor
+              </Button>
+              <Button variant="contained" color="secondary" onClick={() => navigate('/menteeapply')}>
+                Be a Mentee
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
