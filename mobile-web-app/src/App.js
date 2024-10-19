@@ -9,6 +9,8 @@ import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
+import MentorApply from './pages/MentorApply';
+import MenteeApply from './pages/MenteeApply';
 import Navbar from './components/Navbar';
 import PopupChat from './components/PopupChat'; // Import the new PopupChat component
 import './styles/App.css';
@@ -38,6 +40,8 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dashboard" element={<UserLandingPage />} />
+          <Route path="/mentorapply" element={<MentorApply />} />
+          <Route path="/menteeapply" element={<MenteeApply />} />
         </Routes>
         <Navbar />
         <PopupChat messages={chatMessages} onSendMessage={handleSendMessage} />
