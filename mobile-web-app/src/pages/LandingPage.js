@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Typography, Container, Box } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
+import ApplicantTable from '../components/ApplicantTable';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const LandingPage = () => {
   return (
     <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
       <EmergencyButton />
+      <ApplicantTable />
       <Typography variant="h2" component="h1" gutterBottom>
         Welcome to Support App
       </Typography>
