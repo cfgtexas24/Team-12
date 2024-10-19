@@ -248,35 +248,35 @@ const ChatRoom = () => {
       flexDirection: 'column',
     }}>
       <AppBar position="static" sx={{ backgroundColor: '#f1c40f' }}>
-        <Toolbar>
-          {selectedChannel ? (
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="back"
-              sx={{ mr: 2 }}
-              onClick={() => setSelectedChannel(null)}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-          ) : (
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={toggleDrawer(true)}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#000' }}>
-            {selectedChannel || 'Chat Home'}
-          </Typography>
-        </Toolbar>
-      </AppBar>
+  <Toolbar sx={{ justifyContent: 'center', position: 'relative' }}>
+    {selectedChannel ? (
+      <IconButton
+        size="large"
+        edge="start"
+        color="inherit"
+        aria-label="back"
+        sx={{ position: 'absolute', left: 16 }}
+        onClick={() => setSelectedChannel(null)}
+      >
+        <ArrowBackIcon />
+      </IconButton>
+    ) : (
+      <IconButton
+        size="large"
+        edge="start"
+        color="inherit"
+        aria-label="menu"
+        sx={{ position: 'absolute', left: 16 }}
+        onClick={toggleDrawer(true)}
+      >
+        <MenuIcon />
+      </IconButton>
+    )}
+    <Typography variant="h6" component="div" sx={{ color: '#000' }}>
+      {selectedChannel || 'Chat Home'}
+    </Typography>
+  </Toolbar>
+</AppBar>
 
       <Drawer
         anchor="left"
