@@ -10,8 +10,7 @@ const PORT = process.env.PORT || 8000;
 app.use(express.json());
 
 // MongoDB connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://team12:stormdb@cluster0.lcu1c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
+const MONGO_URI = process.env.MONGO_URI
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
