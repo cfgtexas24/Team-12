@@ -37,7 +37,7 @@ const LandingPage = () => {
 
         {/* Welcome and Description Section */}
         <Typography variant="h2" component="h1" gutterBottom align="center">
-          Welcome to Support App
+          Storm Drop-In
         </Typography>
         <Typography variant="body1" paragraph align="center">
           Get the support you need, when you need it.
