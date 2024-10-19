@@ -11,13 +11,19 @@ import {
   ListItemIcon,
   IconButton,
   Box,
-  Button
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from '@mui/material';
 import { 
   Event as EventIcon, 
   Phone as PhoneIcon, 
   Email as EmailIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Settings as SettingsIcon // Import Settings Icon
 } from '@mui/icons-material';
 
 const UserLandingPage = () => {
@@ -36,8 +42,46 @@ const UserLandingPage = () => {
     { name: "Support Group", contact: "1-800-SUPPORT" },
   ]);
 
+  // Profile Settings Dialog State
+  const [openProfileSettingsDialog, setOpenProfileSettingsDialog] = useState(false);
+  const [email, setEmail] = useState("mentor@example.com");
+  const [location, setLocation] = useState("New York");
+
+  // Edit Contacts Dialog State
+  const [openEditContactsDialog, setOpenEditContactsDialog] = useState(false);
+  const [editedContacts, setEditedContacts] = useState(quickContacts);
+
+  const handleOpenProfileSettingsDialog = () => {
+    setOpenProfileSettingsDialog(true);
+  };
+
+  const handleCloseProfileSettingsDialog = () => {
+    setOpenProfileSettingsDialog(false);
+    // Reset the form fields if needed
+  };
+
+  const handleSaveProfileSettings = () => {
+    // Save the email and location to the user data here
+    handleCloseProfileSettingsDialog();
+  };
+
   const handleEditContacts = () => {
-    console.log("Edit contacts");
+    setOpenEditContactsDialog(true);
+  };
+
+  const handleCloseEditContactsDialog = () => {
+    setOpenEditContactsDialog(false);
+  };
+
+  const handleSaveEditedContacts = () => {
+    setQuickContacts(editedContacts);
+    handleCloseEditContactsDialog();
+  };
+
+  const handleContactChange = (index, field, value) => {
+    const updatedContacts = [...editedContacts];
+    updatedContacts[index][field] = value;
+    setEditedContacts(updatedContacts);
   };
 
   // Animate the points value
@@ -63,6 +107,11 @@ const UserLandingPage = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
+          <SettingsIcon /> {/* Settings Icon for Profile */}
+        </IconButton>
+      </Box>
       <Grid container spacing={3}>
         {/* Dashboard */}
         <Grid item xs={12} md={6} lg={4}>
@@ -147,7 +196,7 @@ const UserLandingPage = () => {
               ))}
             </Grid>
             <Box display="flex" justifyContent="center" mt={2}>
-            <Button variant="contained" color="primary" sx={{ mr: 2 }} onClick={() => navigate('/mentorapply')}>
+              <Button variant="contained" color="primary" sx={{ mr: 2 }} onClick={() => navigate('/mentorapply')}>
                 Apply to be a Mentor
               </Button>
               <Button variant="contained" color="secondary" onClick={() => navigate('/menteeapply')}>
@@ -157,6 +206,66 @@ const UserLandingPage = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Profile Settings Dialog */}
+      <Dialog open={openProfileSettingsDialog} onClose={handleCloseProfileSettingsDialog}>
+        <DialogTitle>Edit Profile Settings</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Email"
+            type="email"
+            fullWidth
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Location"
+            type="text"
+            fullWidth
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+          {/* Add more fields as necessary */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProfileSettingsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleSaveProfileSettings} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Contacts Dialog */}
+      <Dialog open={openEditContactsDialog} onClose={handleCloseEditContactsDialog}>
+        <DialogTitle>Edit Quick Contacts</DialogTitle>
+        <DialogContent>
+          {editedContacts.map((contact, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              <TextField
+                margin="dense"
+                label="Contact Name"
+                type="text"
+                fullWidth
+                value={contact.name}
+                onChange={(e) => handleContactChange(index, 'name', e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label="Contact Info"
+                type="text"
+                fullWidth
+                value={contact.contact}
+                onChange={(e) => handleContactChange(index, 'contact', e.target.value)}
+              />
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditContactsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleSaveEditedContacts} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
