@@ -20,34 +20,42 @@ import {
 
 const Calendar = ({ userRole }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState({});
+  const [events, setEvents] = useState(() => {
+    const storedEvents = sessionStorage.getItem('calendarEvents');
+    return storedEvents ? JSON.parse(storedEvents) : {};
+  });
   const [openEventDialog, setOpenEventDialog] = useState(false);
   const [openEventDetailsDialog, setOpenEventDetailsDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', time: '' });
 
-  const isAdminOrMentor = userRole === 'admin' || userRole === 'mentor';
-
   // Sample events
   useEffect(() => {
-    const sampleEvents = {
-      '2024-10-20': [
-        { title: 'Team Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
-        { title: 'Lunch with Sarah', time: '12:30 PM', color: '#0F9D58', description: 'At the new Italian restaurant' }
-      ],
-      '2024-10-21': [
-        { title: 'Project Deadline', time: '09:00 AM', color: '#DB4437', description: 'Submit final report' }
-      ],
-      '2024-10-23': [
-        { title: 'Yoga Class', time: '06:00 PM', color: '#F4B400', description: 'Remember to bring your mat' }
-      ],
-      '2024-10-25': [
-        { title: 'Dentist Appointment', time: '02:00 PM', color: '#4285F4', description: 'Annual check-up' },
-        { title: 'Movie Night', time: '08:00 PM', color: '#0F9D58', description: 'Watch the new superhero movie' }
-      ]
-    };
-    setEvents(sampleEvents);
-  }, []);
+    if (Object.keys(events).length === 0) {
+      const sampleEvents = {
+        '2024-10-20': [
+          { title: 'Mentor Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
+          { title: 'Lunch with Sarah', time: '12:30 PM', color: '#0F9D58', description: 'At the new Italian restaurant' }
+        ],
+        '2024-10-21': [
+          { title: 'Project Deadline', time: '09:00 AM', color: '#DB4437', description: 'Submit final report' }
+        ],
+        '2024-10-23': [
+          { title: 'Yoga Class', time: '06:00 PM', color: '#F4B400', description: 'Remember to bring your mat' }
+        ],
+        '2024-10-25': [
+          { title: 'Dentist Appointment', time: '02:00 PM', color: '#4285F4', description: 'Annual check-up' },
+          { title: 'Movie Night', time: '08:00 PM', color: '#0F9D58', description: 'Watch the new superhero movie' }
+        ]
+      };
+      setEvents(sampleEvents);
+      sessionStorage.setItem('calendarEvents', JSON.stringify(sampleEvents));
+    }
+  }, [events]);
+
+  useEffect(() => {
+    sessionStorage.setItem('calendarEvents', JSON.stringify(events));
+  }, [events]);
 
   const getWeekDates = (date) => {
     const week = [];
@@ -74,9 +82,7 @@ const Calendar = ({ userRole }) => {
   };
 
   const handleAddEvent = () => {
-    if (isAdminOrMentor) {
-      setOpenEventDialog(true);
-    }
+    setOpenEventDialog(true);
   };
 
   const handleCloseEventDialog = () => {
@@ -86,12 +92,15 @@ const Calendar = ({ userRole }) => {
 
   const handleSaveEvent = () => {
     const eventDate = new Date(newEvent.date);
+    eventDate.setDate(eventDate.getDate() + 1); // Add one day to correct the date
     const eventKey = `${eventDate.getFullYear()}-${eventDate.getMonth() + 1}-${eventDate.getDate()}`;
     const formattedTime = formatTime(newEvent.time);
-    setEvents(prevEvents => ({
-      ...prevEvents,
-      [eventKey]: [...(prevEvents[eventKey] || []), { ...newEvent, time: formattedTime, color: '#4285F4' }]
-    }));
+    const updatedEvents = {
+      ...events,
+      [eventKey]: [...(events[eventKey] || []), { ...newEvent, time: formattedTime, color: '#4285F4' }]
+    };
+    setEvents(updatedEvents);
+    sessionStorage.setItem('calendarEvents', JSON.stringify(updatedEvents));
     handleCloseEventDialog();
   };
 
@@ -163,13 +172,19 @@ const Calendar = ({ userRole }) => {
                             height: '58px',
                             backgroundColor: event.color,
                             color: 'white',
-                            padding: '2px',
+                            padding: '4px',
                             overflow: 'hidden',
                             cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
                           }}
                         >
-                          <Typography variant="caption">{event.time}</Typography>
-                          <Typography variant="body2" noWrap>{event.title}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', lineHeight: 1.2, mb: 0.5, color: 'white' }} noWrap>
+                            {event.title}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9, color: 'white' }}>
+                            {event.time}
+                          </Typography>
                         </Paper>
                       ))}
                   </Box>
@@ -195,20 +210,18 @@ const Calendar = ({ userRole }) => {
           <IconButton onClick={handleNextWeek} sx={{ color: '#8e44ad' }}>
             <ChevronRight />
           </IconButton>
-          {isAdminOrMentor && (
-            <Button
-              startIcon={<AddIcon />}
-              onClick={handleAddEvent}
-              sx={{ 
-                ml: 2, 
-                backgroundColor: '#f1c40f', 
-                color: '#000',
-                '&:hover': { backgroundColor: '#f39c12' }
-              }}
-            >
-              Add Event
-            </Button>
-          )}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={handleAddEvent}
+            sx={{ 
+              ml: 2, 
+              backgroundColor: '#f1c40f', 
+              color: '#000',
+              '&:hover': { backgroundColor: '#f39c12' }
+            }}
+          >
+            Add Event
+          </Button>
         </Box>
       </Box>
 

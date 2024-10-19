@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/App.css';
 
 const Logon = () => {
@@ -6,6 +7,8 @@ const Logon = () => {
     username: '',
     password: '',
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,7 +34,8 @@ const Logon = () => {
 
       if (response.ok) {
         alert('Login Successful!');
-        // Handle successful login (e.g., redirect or save user data)
+        // Redirect to UserLandingPage
+        navigate('/dashboard');
       } else {
         alert(result.error || 'Login failed');
       }
