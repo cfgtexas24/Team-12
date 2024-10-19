@@ -4,28 +4,42 @@ const Application = require('../Models/Application');
 
 // Controller to handle sending a message
 
+const createAuth = (req, res, next) => {
+  // Check if session and user_id exist
+  if (!req.session || !req.session.user_id) {
+    console.log('Session or user_id not found:', req.session);  // Log session content
+    return res.status(401).json({ message: 'Unauthorized, please log in' });
+  }
+
+  // Log the session to ensure user_id and client_type exist
+  console.log('Session data in createAuth:', req.session);
+
+  // Assign session values to request object for further processing
+  req.user_id = req.session.user_id;
+  req.client_type = req.session.client_type;
+
+  next(); // Proceed to the next middleware or route
+};
+
 
 // {
 //     "application_details":  "Always jiggy yunno"
 // }
 
 const createApplication = async (req, res) => {
-  const { text } = req.body;
+  const { details } = req.body;
 
-  // Check if user is logged in (i.e., session contains user_id)
-  if (!req.session.user_id) {
-    return res.status(401).json({ message: 'Unauthorized, please log in' });
-  }
+  console.log(details);
 
-  const applicant_id = uuidv4();
+  const applicantion_id = uuidv4();
 
   try {
-    // Create a new message with the user ID from the session
+    // Create a new application with the user ID from the request object
     const application = new Application({
-      application_id: applicant_id,
-      applicantion_type: req.session.client_type, 
-      user_id: req.session.user_id, // Get the user ID from the session
-      application_details: text,
+      application_id: applicantion_id,
+      application_type: req.session.client_type, 
+      applicant_id: req.session.user_id, // Get the user ID from the request object
+      details: details,
       timestamp: new Date()
     });
 
@@ -39,6 +53,4 @@ const createApplication = async (req, res) => {
   }
 };
 
-module.exports = {
-  createApplication
-};
+module.exports = { createApplication, createAuth };

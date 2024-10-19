@@ -5,7 +5,7 @@ const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 require('dotenv').config();
-const cookieParser = require('cookie-parser');
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -17,9 +17,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Initialize session middleware
-app.use(cookieParser());
+// Use session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET,  // Make sure to use a strong secret key in production
+  resave: false,              // Prevents the session from being saved back to the store if not modified
+  saveUninitialized: false,   // Don't save a session if it hasn't been initialized
+  cookie: { secure: false }   // Set to true if using HTTPS, otherwise set to false for local development
+}));
+
+// Other middleware and routes
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI;

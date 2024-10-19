@@ -3,7 +3,6 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const Client = require('../Models/Client');
 const { ClientType } = require('../Models/ClientType');
-const crypto = require('crypto');
 
 // Signup function
 
@@ -81,13 +80,12 @@ const login = async (req, res) => {
     }
 
     // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, current_user.password);
+    const isMatch = (current_user.password == password);
     
     if (isMatch) {
-      // Set cookies on successful login (adjust options as needed)
-      res.cookie('user_id', current_user._id.toString(), { httpOnly: true, secure: true }); // Store user ID in a cookie
-      res.cookie('client_type', current_user.client_type, { httpOnly: true, secure: true }); // Store client type if needed
-
+      req.session.user_id = current_user._id.toString();  // Store user ID in session
+      req.session.client_type = current_user.client_type; 
+      console.log('Session data:', req.session);
       return res.status(200).json({ message: 'Logged in successfully' });
     } else {
       return res.status(400).json({ message: 'Incorrect password' });

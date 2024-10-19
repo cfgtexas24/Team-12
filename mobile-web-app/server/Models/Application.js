@@ -9,7 +9,7 @@ const applicationSchema = new mongoose.Schema({
         type: String, 
         required: true
     },
-    applicantion_type: {
+    application_type: {
         type: Number,
         required: true
     },
@@ -17,7 +17,7 @@ const applicationSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    application_details: {
+    details: {
         type: String,
         required: true
     }
