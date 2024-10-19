@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import SignIn from './pages/SignIn';
@@ -10,11 +10,21 @@ import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
 import Navbar from './components/Navbar';
-import MentorApply from './pages/MentorApply'
-import MenteeApply from './pages/MenteeApply'
+import PopupChat from './components/PopupChat'; // Import the new PopupChat component
 import './styles/App.css';
 
 function App() {
+  const [chatMessages, setChatMessages] = useState([]);
+
+  const handleSendMessage = (message) => {
+    setChatMessages([...chatMessages, { text: message, sender: 'You' }]);
+    // Here you would typically send the message to a server
+    // For now, we'll just simulate a response
+    setTimeout(() => {
+      setChatMessages(prevMessages => [...prevMessages, { text: 'This is a response', sender: 'Bot' }]);
+    }, 1000);
+  };
+
   return (
     <Router>
       <div className="App">
@@ -28,10 +38,9 @@ function App() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dashboard" element={<UserLandingPage />} />
-          <Route path="/mentorapply" element={<MentorApply />} />
-          <Route path="/menteeapply" element={<MenteeApply />} />
         </Routes>
         <Navbar />
+        <PopupChat messages={chatMessages} onSendMessage={handleSendMessage} />
       </div>
     </Router>
   );

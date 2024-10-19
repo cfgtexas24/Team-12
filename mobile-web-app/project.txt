@@ -1,0 +1,2965 @@
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+
+// Signup function
+const signup = async (req, res) => {
+  try {
+    const { name, username, password, user_type } = req.body;
+
+    // Validate input
+    if (!name || !username || !password || user_type === undefined) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Validate user_type
+    if (![0, 1, 2].includes(user_type)) {
+      return res.status(400).json({ error: 'Invalid user type' });
+    }
+
+    // Check if username already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    // Generate unique user ID and hash the password
+    const userId = uuidv4();
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
+    const newUser = await User.create({
+      user_id: userId,
+      user_type,
+      name,
+      username,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({ message: 'User created successfully', user_id: newUser.user_id });
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Failed to create user', details: error.message });
+  }
+};
+
+// Login function
+const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Validate input
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    // Check if the user exists
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid username or password' });
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid username or password' });
+    }
+
+    res.status(200).json({ message: 'Login successful', user_id: user.user_id });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Failed to login', details: error.message });
+  }
+};
+
+module.exports = {
+  signup,
+  login,
+};
+const mongoose = require('mongoose');
+
+const lifeSkillSchema = new mongoose.Schema({
+  lifeskill_id: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+});
+
+const LifeSkill = mongoose.model('LifeSkill', lifeSkillSchema);
+
+module.exports = LifeSkill;
+const LifeSkillType = Object.freeze({
+    SOFT_SKILLS: 0,
+    TECHNICAL_SKILLS: 1,
+    LIFE_MANAGEMENT: 2,
+    
+  });
+  
+  module.exports = LifeSkillType;
+  
+const mongoose = require('mongoose');
+
+const messageSchema = new mongoose.Schema({
+  sender_id: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  body: {
+    type: String,
+    required: true,
+  },
+});
+
+const Message = mongoose.model('Message', messageSchema);
+
+module.exports = Message;
+const NotificationLevel = Object.freeze({
+    LOW: 0,
+    MEDIUM: 1,
+    HIGH: 2,
+  });
+  
+  module.exports = NotificationLevel;
+  
+const mongoose = require('mongoose');
+const NotificationLevel = require('./NotificationLevel');
+const NotificationType = require('./NotificationType');
+
+const notificationSchema = new mongoose.Schema({
+  sender_id: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+  notification_level: {
+    type: Number,
+    required: true,
+    enum: Object.values(NotificationLevel),
+  },
+  notification_type: {
+    type: String,
+    required: true,
+    enum: Object.values(NotificationType),
+  },
+});
+
+const Notification = mongoose.model('Notification', notificationSchema);
+
+module.exports = Notification;
+const NotificationType = Object.freeze({
+    HOUSING: 'HOUSING',
+    FOOD: 'FOOD',
+    VERIFICATION: 'VERIFICATION',
+    OTHER: 'OTHER',
+  });
+  
+  module.exports = NotificationType;
+  
+// Models/User.js
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  user_id: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  user_type: {
+    type: Number,
+    required: true,
+    enum: [0, 1, 2], // Admin, Mentor, Mentee
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
+const UserType = Object.freeze({
+  ADMIN: 0,
+  MENTOR: 1,
+  MENTEE: 2,
+});
+
+module.exports = {
+  UserType,
+};
+const express = require('express');
+const router = express.Router();
+const { signup, login } = require('../Controllers/userControllers');
+
+
+router.post('/signup', signup);
+router.post('/login', login);
+
+module.exports = router;
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const userRoutes = require('./routes/userRoutes');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 8000;
+
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:3000', // or whatever port your React app is running on
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json());
+
+// MongoDB connection
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI is not defined in the environment variables.');
+  process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected successfully'))
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
+
+// Routes
+app.use('/api', userRoutes);
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+import React, { useState, useEffect } from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Select, MenuItem, Typography, Box } from '@mui/material';
+
+const ApplicantTable = () => {
+  const [applicants, setApplicants] = useState([]);
+  const [statuses, setStatuses] = useState({});
+  const [expandedRows, setExpandedRows] = useState({});
+
+  useEffect(() => {
+    // Sample data for testing
+    const sampleApplicants = [
+      {
+        _id: '1',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        phone: '123-456-7890',
+        occupation: 'Engineer',
+        experience: 5,
+        reason: 'Looking to mentor someone in my field.',
+        preferredMenteeAttributes: 'Eager to learn',
+        role: 'Mentor', // New role field
+        file: null,
+      },
+      {
+        _id: '2',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane.smith@example.com',
+        phone: '987-654-3210',
+        occupation: 'Designer',
+        experience: 3,
+        reason: 'Want to give back to the community.',
+        preferredMenteeAttributes: 'Creative and curious',
+        role: 'Mentee', // New role field
+        file: null,
+      },
+    ];
+
+    setApplicants(sampleApplicants);
+    const initialStatuses = sampleApplicants.reduce((acc, applicant) => {
+      acc[applicant._id] = 'pending'; // Default status
+      return acc;
+    }, {});
+    setStatuses(initialStatuses);
+  }, []);
+
+  const handleStatusChange = (applicantId, newStatus) => {
+    setStatuses((prevStatuses) => ({
+      ...prevStatuses,
+      [applicantId]: newStatus,
+    }));
+  };
+
+  const toggleRowExpansion = (applicantId) => {
+    setExpandedRows((prevExpandedRows) => ({
+      ...prevExpandedRows,
+      [applicantId]: !prevExpandedRows[applicantId],
+    }));
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'darkgrey';
+      case 'matched':
+        return 'green';
+      case 'rejected':
+        return 'red';
+      default:
+        return 'inherit';
+    }
+  };
+
+  return (
+    <div>
+      <Typography variant="h4" gutterBottom>
+        Applicant Table
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>First Name</TableCell>
+              <TableCell>Last Name</TableCell>
+              <TableCell>Role</TableCell> {/* New column for role */}
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {applicants.map((applicant) => (
+              <React.Fragment key={applicant._id}>
+                <TableRow>
+                  <TableCell>{applicant.firstName}</TableCell>
+                  <TableCell>{applicant.lastName}</TableCell>
+                  <TableCell>{applicant.role}</TableCell> {/* Display role */}
+                  <TableCell>
+                    <Select
+                      value={statuses[applicant._id] || 'pending'}
+                      onChange={(e) => handleStatusChange(applicant._id, e.target.value)}
+                      sx={{
+                        backgroundColor: getStatusColor(statuses[applicant._id]),
+                        color: 'white',
+                      }}
+                    >
+                      <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="matched">Matched</MenuItem>
+                      <MenuItem value="rejected">Rejected</MenuItem>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Button onClick={() => toggleRowExpansion(applicant._id)}>
+                      {expandedRows[applicant._id] ? 'Collapse' : 'Expand'}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                {expandedRows[applicant._id] && (
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Box p={2} border={1} borderColor="grey.300">
+                        <Typography variant="h6">Details for {applicant.firstName} {applicant.lastName}</Typography>
+                        <p><strong>Email:</strong> {applicant.email}</p>
+                        <p><strong>Phone:</strong> {applicant.phone}</p>
+                        <p><strong>Occupation:</strong> {applicant.occupation}</p>
+                        <p><strong>Experience:</strong> {applicant.experience}</p>
+                        <p><strong>Reason:</strong> {applicant.reason}</p>
+                        <p><strong>Preferred Attributes:</strong> {applicant.preferredMenteeAttributes}</p>
+                        <p><strong>File:</strong> {applicant.file ? <a href={applicant.file} download>Download</a> : 'No File'}</p>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
+  );
+};
+
+export default ApplicantTable;
+import React from 'react'
+import Banner from 'react-banner'
+import 'react-banner/dist/style.css'
+ 
+const Example = props => {
+    return (
+        <Banner
+            logo="React Banner"
+            url={ window.location.pathname }
+            items={[
+                { "content": "Example Link", "url": "/example" },
+                { "content": "Another", "url": "/another" },
+                {
+                    "content": "Link w/ Children",
+                    "url": "/children",
+                    "children": [
+                        { "content": "John", "url": "/children/john" },
+                        { "content": "Jill", "url": "/children/jill" },
+                        { "content": "Jack", "url": "/children/jack" }
+                    ]
+                }
+            ]}
+        />
+    )
+}
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@mui/material';
+import { Error } from '@mui/icons-material';
+import '../App.css'; 
+
+const EmergencyBanner = () => {
+  return (
+    <Button
+      variant="contained"
+      color="error"
+      component={Link}
+      to="/emergency"
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        backgroundColor: 'red', 
+        color: 'var(--color-secondary)', 
+        padding: '15px 0',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        border: '4px solid',
+        borderColor: 'var(--color-primary)', 
+        textAlign: 'center',
+        zIndex: 1000, 
+        '&:hover': {
+          backgroundColor: 'var(--color-primary)', 
+        }
+      }}
+    >
+      <Error sx={{ marginRight: '10px' }} /> Click Here for Emergency
+    </Button>
+  );
+};
+
+export default EmergencyBanner;
+import { useState } from 'react';
+import LessonDetails from '../components/LessonDetails.js';
+
+export default function Gallery({ lesson }) {
+  const [showMore, setShowMore] = useState(false);
+
+  function handleMoreClick() {
+    setShowMore(!showMore);
+  }
+
+  function VideoPlayer({ link }) {
+    return (
+      <div className="video-container">
+        <iframe
+          width="560"
+          height="315"
+          src={link}
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+      </div>
+    );
+  }
+
+  function ContentManager({ lesson }) {
+    if (lesson.type === 'YouTube') {
+      return <VideoPlayer link={lesson.url} />;
+    } else {
+      return (
+        <>
+          <p>{lesson.text}</p>
+          <p>
+            Read more at <a href={lesson.url}>{lesson.author}</a>
+          </p>
+        </>
+      );
+    }
+  }
+
+  return (
+    <div className="timeline-item">
+      <div className="timeline-content">
+        <h2>{lesson.title}</h2>
+        <p>{lesson.description}</p>
+        <button onClick={handleMoreClick}>
+          {showMore ? 'Hide details' : 'Show details'}
+        </button>
+        {showMore && <ContentManager lesson={lesson} />}
+      </div>
+    </div>
+  );
+}
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { BottomNavigation, BottomNavigationAction } from '@mui/material';
+import { Home, Chat, EmojiPeople, DateRange, ContactPhone } from '@mui/icons-material';
+
+const Navbar = () => {
+  const [value, setValue] = React.useState(0);
+  const navigate = useNavigate();
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    switch(newValue) {
+      case 0:
+        navigate('/');
+        break;
+      case 1:
+        navigate('/chat');
+        break;
+      case 2:
+        navigate('/lifeskills');
+        break;
+      case 3:
+        navigate('/calendar');
+        break;
+      case 4:
+        navigate('/contact');
+        break;
+      default:
+        break;
+    }
+  };
+
+  return (
+    <BottomNavigation
+      value={value}
+      onChange={handleChange}
+      showLabels
+      sx={{
+        width: '100%',
+        position: 'fixed',
+        bottom: 0,
+      }}
+    >
+      <BottomNavigationAction label="Home" icon={<Home />} />
+      <BottomNavigationAction label="Chat" icon={<Chat />} />
+      <BottomNavigationAction label="Life Skills" icon={<EmojiPeople />} />
+      <BottomNavigationAction label="Calendar" icon={<DateRange />} />
+      <BottomNavigationAction label="Contact" icon={<ContactPhone />} />
+    </BottomNavigation>
+  );
+};
+
+export default Navbar;
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, Fab, Drawer, IconButton, Typography, TextField, Button } from '@mui/material';
+import ChatIcon from '@mui/icons-material/Chat';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+
+const PopupChat = ({ messages, onSendMessage }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const handleToggle = () => setIsOpen(!isOpen);
+
+  const handleSend = () => {
+    if (newMessage.trim()) {
+      onSendMessage(newMessage);
+      setNewMessage('');
+    }
+  };
+
+  return (
+    <>
+      <Fab
+        color="primary"
+        aria-label="chat"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        onClick={handleToggle}
+      >
+        <ChatIcon />
+      </Fab>
+      <Drawer
+        anchor="right"
+        open={isOpen}
+        onClose={handleToggle}
+        PaperProps={{ sx: { width: '300px' } }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e0e0e0' }}>
+            <Typography variant="h6">Chat</Typography>
+            <IconButton onClick={handleToggle}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+            {messages.map((msg, index) => (
+              <Box key={index} sx={{ mb: 1, textAlign: msg.sender === 'You' ? 'right' : 'left' }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{msg.sender}</Typography>
+                <Typography variant="body1" sx={{ 
+                  backgroundColor: msg.sender === 'You' ? '#e3f2fd' : '#f5f5f5',
+                  p: 1,
+                  borderRadius: '8px',
+                  display: 'inline-block',
+                  maxWidth: '80%'
+                }}>{msg.text}</Typography>
+              </Box>
+            ))}
+            <div ref={messagesEndRef} />
+          </Box>
+          <Box sx={{ p: 2, borderTop: '1px solid #e0e0e0', display: 'flex' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Type a message..."
+            />
+            <Button onClick={handleSend} sx={{ ml: 1 }}>
+              <SendIcon />
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
+    </>
+  );
+};
+
+export default PopupChat;
+import React from 'react';
+
+const Timeline = ({ items }) => {
+  return (
+    <div className="timeline">
+      {items.map((item, index) => (
+        <TimelineItem key={index} item={item} />
+        
+      ))}
+    </div>
+  );
+};
+
+const TimelineItem = ({ item }) => {
+  return (
+    <div>
+      <button className="circle-button"></button>
+
+      <span>{item.title}</span>
+      <p className="side-text">{item.type}</p>
+      <p className="side-text">{item.description}</p>
+    </div>
+  );
+};
+
+
+export default Timeline;
+export const careerList = [{
+  title: 'Overview of Career Readiness',
+  author: "UC Davis Career Center",
+  description: "Brief introduction into how to approach your own career readiness.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/oex8FCqivwk?si=Ku_zqaL4yrXi6jiL'
+}, {
+  title: 'Digital Technology',
+  author: "Career Exploration and Success",
+  description: "Shilp Shah shares his experience in leveraging existing digital technologies ethically and efficiently to solve problems, complete tasks, and accomplish goals.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/pB5PUndFKe4?si=DDcl5UcTZVdTfE9O'
+}, {
+  title: 'Career Management',
+  author: "Career Exploration and Success",
+  description: "Thomas Woods shares how he was able to identify and articulate his skills, strengths, knowledge, and experiences as he navigates being a FIGS Peer Instructor.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/Lwr8bfWphSk?si=DgJ_aTkxNEMWaQzp'
+}, {
+  title: 'Communication',
+  author: "Career Exploration and Success",
+  description: "Colleen shares advice for you when it comes to taking advantage of opportunities and how they prepare you for a career.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/5WGjCHnR9dk?si=ESW_ZUgIteTo8pSP'
+}, {
+  title: 'Leadership',
+  author: "Career Exploration and Success",
+  description: "Dean Schansinger shares his career-readiness story by being the Rutgers Housing Association (RHA) president at Rutgers–New Brunswick.",
+  type: "YouTube",
+  url: 'https://www.youtube.com/embed/JED_r0TuZ_M?si=N-zOwaHHvzeeTZBR'
+}, {
+  title: 'Professionalism/Work Ethic',
+  author: "Career Exploration and Success",
+  type: "YouTube",
+  description: "Hear from Shamir Willis as he shares his experience working in the department of Student Centers and Activities and how it paved the way for his career readiness. ",
+  url: 'https://www.youtube.com/embed/EaUCNfI7p_s?si=HpIS06c-7BtrXS_E',
+  text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.'  
+}, {
+  title: 'Global Fluency',
+  author: "Career Exploration and Success",
+  type: "YouTube",
+  description: "Before the pandemic, Anna shares how studying abroad helped with her career readiness. ",
+  url: 'https://www.youtube.com/embed/kXmLY1lz90k?si=7UlRwtLenv3QC8cl',
+  text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.'  
+}];
+export const cookingList = [
+  {
+    title: 'Cooking Tips For Kitchen Beginners',
+    author: 'The Spruce Eats',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/aopS3q6f1GY?si=xtxkBTbGGqkQDfuC',
+    description: "Professional chef instructor Frank Proto shares his top tips for beginners, helping you to elevate the basic skills you'll need to find your footing in the kitchen."
+  },
+  {
+    title: 'Chicken Quesadilla',
+    author: 'Marta Colvin Andrade',
+    description: 'A recipe for a healthy chicken quesadilla using corn and zucchini.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/bDQ2MUERJAg?si=Mh_kv63JOWTgA-ZD'
+  },
+  {
+    title: 'How to Make Perfect Hard Boiled Eggs',
+    author: 'Tasty',
+    description: 'Learn how to make hard-boiled eggs perfectly every time.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/FTha4zARGN4?si=_kRxWxnGEzPaipP7'
+  },
+  {
+    title: 'The Perfect Grilled Cheese Sandwich',
+    author: 'Epicurious',
+    description: 'Master the art of making the perfect grilled cheese sandwich.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/aOJRJh1xU20?si=hasGvxtNULiN_BzF'
+  },
+  {
+    title: 'How to boil pasta',
+    author: 'The Cooking Corner',
+    description: 'Perfect guide to getting your pasta just right.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/VnwNR5qR9ow?si=2eXwRrZXK-ek1K1z'
+  },
+  {
+    title: '10 Cooking Hacks You Wish You Knew Sooner',
+    author: 'BuzzFeed Nifty',
+    description: 'Quick cooking hacks to make your life easier in the kitchen.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/OF72d0xzJy0?si=nzAHHzxfnoQ0ouP5'
+  }
+];
+export const financialList = [{
+    title: 'A Beginners Guide to Financial Education',
+    author: "Charlee Wayne",
+    description: "This video is a beginners guide to financial literacy, or the knowledge and skills to make smart money decisions in your personal finances.",
+    type: "YouTube",
+    url: 'https://www.youtube.com/embed/4XZIv4__sQA?si=2bMFgDD-O-2isTee'
+  }, {
+    title: 'You and Your Money', 
+    author: "OpenLearn",
+    type: "website",
+    description: "Learn how to choose and manage bank accounts, savings accounts, and credit cards, review bank statements, understand credit rating agencies' impact, make informed decisions about phone contracts and insurance, and conduct secure financial transactions.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67802',
+    text: 'Let’s get started. Bobby Seagull introduces the course in the first video and outlines some of the ways your money becomes more important as you come to the end of school or college. In this session you will explore banking and saving, and why you need skills in managing your money. It’s all about choosing to keep safe and take control.'  
+  }, {
+    title: 'Earning Money, Understanding Tax',
+    author: "OpenLearn",
+    type: "website",
+    description: "Gain knowledge about minimum wage and employment rights, assess the pros and cons of zero-hour contracts, understand Income Tax, National Insurance Contributions, tax codes, filing tax returns, and the basics of state benefits and means testing.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67800',
+    text: 'As you start to earn an income from part-time or holiday work you’ll want to understand why some of what you earn can be deducted in the form of Income Tax and National Insurance Contributions (NICs). What are these, when do you have to pay them and how do you claim back tax if you’ve paid more than you should? What does the government do with the Income Tax and National Insurance that it raises? As you’ll learn here, a substantial proportion of government spending is on benefits for various groups within the population. Might you be eligible for any benefits?'  
+  }, {
+    title: 'Being a Savvy Shopper and Building a Budget',
+    author: "OpenLearn",
+    type: "website",
+    description: "Learn to distinguish between essential and non-essential spending, make informed decisions about phone contracts and insurance, recognize behavioral biases in spending, shop online safely, and create and use a simple budget.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67803',
+    text: 'In this session the focus turns first to spending and the factors that determine our spending habits. You then start to build a simple budget. This is going to skill you up to manage your personal finances effectively in the period before you leave home.'  
+  }, {
+    title: 'Preparing for Life After School',
+    author: "OpenLearn",
+    type: "website",
+    description: "Explore post-secondary education options, learn how to finance further studies, take advantage of youth discounts, create a detailed budget for living independently, and manage the financial pressures of living away from home.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67821',
+    text: 'Your focus in this session is reaching that key point in your life where you decide what you want to do when your schooldays are over. Whatever choice you make, it will have financial consequences for you – especially as this is normally when wider responsibilities for financial management are passed from your parents to you.'  
+  }, {
+    title: 'Living in Shared Households',
+    author: "OpenLearn",
+    type: "website",
+    description: "Make informed decisions when choosing a rental property, understand the financial costs and responsibilities of being a tenant, manage potential tenancy issues, and account for the budgetary impact of living in a shared rental.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67859',
+    text: 'From the age of 18 it’s likely that you’ll start living away from home for at least part of the year, either to study or to start a job in another part of the country. As a student, even if you spend your first year in student accommodation, you’ll probably move into rented accommodation with other students at some point. For your first job, even if it’s close enough for you to stay in the family home, as time moves on there’s a high chance you’ll want to move out, particularly if you’re in a long-term relationship. Although the timeline varies, and whatever the reason for your move away, there’s a high chance you’ll find yourself living in a shared rental with people of your own age. This means changes to your budget, and it’s these changes that you focus on here.'  
+  }, {
+    title: 'Understanding Debt and How to Borrow Wisely',
+    author: "OpenLearn",
+    type: "website",
+    description: "Learn about different borrowing options and debt products, recognize when borrowing is sensible versus reckless, understand what affects the cost of borrowing, and compare debt products based on interest rates.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67860',
+    text: 'In this session you look at what’s involved in borrowing (and repaying) money, at how interest rates work, at the financial institutions that are involved in setting rates, and at how debt can be used sensibly to support your goals and aspirations.'  
+  }, {
+    title: 'Good Credit and How to Keep it',
+    author: "OpenLearn",
+    type: "website",
+    description: "Evaluate the pros and cons of borrowing for purchases compared to other financing methods, understand credit scoring and the role of credit reference agencies, learn how to maintain a good credit score, and know your options if you encounter debt problems.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67862',
+    text: 'You’ve looked at the institutions that lend money, the various ways money can be borrowed and at what determines the cost of borrowing. You’ve also looked at when borrowing is rational and when it is foolish. In this session you extend your analysis of debt and explore how to integrate the cost of managing your debts within your budget. You take a look at the activities of the credit reference agencies and at how you can manage your financial profile to maximize the credit score assigned to you.'  
+  }, {
+    title: 'Planning Now for Later in Your Life',
+    author: "OpenLearn",
+    type: "website",
+    description: "Learn the steps to buy a property, plan for a solid pension and understand the expected state pension, explore alternative pension products and their income determinants, and apply the four-stage financial planning model for significant financial decisions.",
+    url: 'https://www.open.edu/openlearn/mod/oucontent/view.php?id=67875',
+    description: 'The earlier you start to plan and save for your pension the better the outcome will be for you in later life when you retire from work. Starting a pension plan in your early 20s make sense. If you leave it until you’re in your 40s and 50s you risk being in income poverty when you retire. Here you’ll learn more about the risks and returns from different types of investment.'  
+  }, {
+    title: 'Wrapping Up - A Comprehensive Video about Personal Finance',
+    author: "Trip2Wealth",
+    description: "Is it possible to maintain a comfortable standard of living despite having a little income? Are the risks associated with investing in the stock market for regular people manageable? The answer of all these questions lies in one thing. That is financial literacy. With Financial literacy all that is possible. The thing is you don’t need to inherit a lot of money or having high salary to live a financially free life, rather the answer lies in managing your finances better and efficiently.And how one can do that.",
+    type: "YouTube",
+    url: 'https://www.youtube.com/embed/0kwl10ftLm0?si=F3wI1ZZN4yXMR9P3'
+  }];
+  
+export const stressList = [{
+    title: 'Stress 101 - Understanding Stress and How to Manage It',
+    author: "HealthTexas Medical Group",
+    description: "Understand what stress is and how it affects your daily life. In this video, we will talk about how to manage stress and prevent it from taking a toll on our health.",
+    type: "YouTube",
+    url: 'https://www.youtube.com/embed/9Hto1HeMrYQ?si=F7v5p9WxhJK78TZy'
+},
+{
+    title: 'Meditation 101',
+    author: 'Dr. Christian Conte',
+    description: "Be easy on yourself as you are learning to meditate! Remember that, like exercise, it takes practice to get down - but please don't give up. Research shows that meditation helps you lessen activity in your Default Mode Network (helping you quiet your inner chatter), helps you regulate your emotions, reduce blood pressure, and many other health benefits. Take the time to meditate.",
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/hhroD8WPT6s?si=_BZLMDPKjbqsHBZp'
+}, {
+    title: 'How to Practice Mindfulness',
+    author: 'Psych Hub',
+    description: 'Practicing mindfulness through meditation or other techniques improves both mental and physical health. Follow this body scan exercise to help improve focus and overall wellbeing.',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/bLpChrgS0AY?si=LPvARgT2XphJTxeX'
+},
+{
+    title: 'How to cope with anxiety | Olivia Remes | TEDxUHasselt',
+    author: 'TedX Talks',
+    description: 'Anxiety is one of most prevalent mental health disorders, with 1 out of 14 people around the world being likely affected. Leading up to conditions such as depression, increased risk for suicide, disability and requirement of high health services, very few people who often need treatment actually receive it. In her talk “How to cope with anxiety”, Olivia Remes of the University of Cambridge will share her vision on anxiety and will unravel ways to treat and manage this health disorder. ',
+    type: 'YouTube',
+    url: 'https://www.youtube.com/embed/WWloIAQpMcQ?si=Kitw8WNaR12Ths3Q'
+}
+]
+
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from '@mui/material';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Add as AddIcon
+} from '@mui/icons-material';
+
+const Calendar = ({ userRole }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState(() => {
+    const storedEvents = sessionStorage.getItem('calendarEvents');
+    return storedEvents ? JSON.parse(storedEvents) : {};
+  });
+  const [openEventDialog, setOpenEventDialog] = useState(false);
+  const [openEventDetailsDialog, setOpenEventDetailsDialog] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', time: '' });
+
+  // Sample events
+  useEffect(() => {
+    if (Object.keys(events).length === 0) {
+      const sampleEvents = {
+        '2024-10-20': [
+          { title: 'Mentor Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
+          { title: 'Lunch with Sarah', time: '12:30 PM', color: '#0F9D58', description: 'At the new Italian restaurant' }
+        ],
+        '2024-10-21': [
+          { title: 'Project Deadline', time: '09:00 AM', color: '#DB4437', description: 'Submit final report' }
+        ],
+        '2024-10-23': [
+          { title: 'Yoga Class', time: '06:00 PM', color: '#F4B400', description: 'Remember to bring your mat' }
+        ],
+        '2024-10-25': [
+          { title: 'Dentist Appointment', time: '02:00 PM', color: '#4285F4', description: 'Annual check-up' },
+          { title: 'Movie Night', time: '08:00 PM', color: '#0F9D58', description: 'Watch the new superhero movie' }
+        ]
+      };
+      setEvents(sampleEvents);
+      sessionStorage.setItem('calendarEvents', JSON.stringify(sampleEvents));
+    }
+  }, [events]);
+
+  useEffect(() => {
+    sessionStorage.setItem('calendarEvents', JSON.stringify(events));
+  }, [events]);
+
+  const getWeekDates = (date) => {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(date);
+      day.setDate(date.getDate() + i);
+      week.push(day);
+    }
+    return week;
+  };
+
+  const weekDates = getWeekDates(currentDate);
+
+  const handlePrevWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() - 7);
+    setCurrentDate(newDate);
+  };
+
+  const handleNextWeek = () => {
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + 7);
+    setCurrentDate(newDate);
+  };
+
+  const handleAddEvent = () => {
+    setOpenEventDialog(true);
+  };
+
+  const handleCloseEventDialog = () => {
+    setOpenEventDialog(false);
+    setNewEvent({ title: '', description: '', date: '', time: '' });
+  };
+
+  const handleSaveEvent = () => {
+    const eventDate = new Date(newEvent.date);
+    eventDate.setDate(eventDate.getDate() + 1); // Add one day to correct the date
+    const eventKey = `${eventDate.getFullYear()}-${eventDate.getMonth() + 1}-${eventDate.getDate()}`;
+    const formattedTime = formatTime(newEvent.time);
+    const updatedEvents = {
+      ...events,
+      [eventKey]: [...(events[eventKey] || []), { ...newEvent, time: formattedTime, color: '#4285F4' }]
+    };
+    setEvents(updatedEvents);
+    sessionStorage.setItem('calendarEvents', JSON.stringify(updatedEvents));
+    handleCloseEventDialog();
+  };
+
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setOpenEventDetailsDialog(true);
+  };
+
+  const handleCloseEventDetailsDialog = () => {
+    setOpenEventDetailsDialog(false);
+    setSelectedEvent(null);
+  };
+
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
+  };
+
+  const parseTime = (timeString) => {
+    const [time, period] = timeString.split(' ');
+    let [hours, minutes] = time.split(':');
+    hours = parseInt(hours);
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    return { hours, minutes };
+  };
+
+  const renderWeekView = () => {
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+
+    return (
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 150px)', overflowY: 'auto' }}>
+        <Box sx={{ width: '80px', flexShrink: 0 }}>
+          {hours.map(hour => (
+            <Box key={hour} sx={{ height: '60px', borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography variant="caption">{formatTime(`${hour}:00`)}</Typography>
+            </Box>
+          ))}
+        </Box>
+        <Box sx={{ display: 'flex', flexGrow: 1 }}>
+          {weekDates.map((date, index) => {
+            const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            const dayEvents = events[dateKey] || [];
+
+            return (
+              <Box key={index} sx={{ flexGrow: 1, borderLeft: '1px solid #e0e0e0' }}>
+                {hours.map(hour => (
+                  <Box key={hour} sx={{ height: '60px', borderBottom: '1px solid #e0e0e0', position: 'relative' }}>
+                    {dayEvents
+                      .filter(event => {
+                        const { hours: eventHour } = parseTime(event.time);
+                        return eventHour === hour;
+                      })
+                      .map((event, eventIndex) => (
+                        <Paper
+                          key={eventIndex}
+                          onClick={() => handleEventClick(event)}
+                          sx={{
+                            position: 'absolute',
+                            top: '0',
+                            left: '2px',
+                            right: '2px',
+                            height: '58px',
+                            backgroundColor: event.color,
+                            color: 'white',
+                            padding: '4px',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', lineHeight: 1.2, mb: 0.5, color: 'white' }} noWrap>
+                            {event.title}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9, color: 'white' }}>
+                            {event.time}
+                          </Typography>
+                        </Paper>
+                      ))}
+                  </Box>
+                ))}
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ p: 3, backgroundColor: '#f5f5f5', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4" sx={{ color: '#8e44ad' }}>
+          {`${weekDates[0].toLocaleDateString('default', { month: 'long', day: 'numeric' })} - ${weekDates[6].toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+        </Typography>
+        <Box>
+          <IconButton onClick={handlePrevWeek} sx={{ color: '#8e44ad' }}>
+            <ChevronLeft />
+          </IconButton>
+          <IconButton onClick={handleNextWeek} sx={{ color: '#8e44ad' }}>
+            <ChevronRight />
+          </IconButton>
+          <Button
+            startIcon={<AddIcon />}
+            onClick={handleAddEvent}
+            sx={{ 
+              ml: 2, 
+              backgroundColor: '#f1c40f', 
+              color: '#000',
+              '&:hover': { backgroundColor: '#f39c12' }
+            }}
+          >
+            Add Event
+          </Button>
+        </Box>
+      </Box>
+
+      <Grid container spacing={1} sx={{ mb: 2 }}>
+        {weekDates.map((date, index) => (
+          <Grid item xs key={index}>
+            <Typography variant="subtitle2" align="center" sx={{ fontWeight: 'bold', color: '#8e44ad' }}>
+              {date.toLocaleDateString('default', { weekday: 'short' })}
+            </Typography>
+            <Typography variant="body2" align="center">
+              {date.getDate()}
+            </Typography>
+          </Grid>
+        ))}
+      </Grid>
+
+      {renderWeekView()}
+
+      <Dialog open={openEventDialog} onClose={handleCloseEventDialog}>
+        <DialogTitle>Add New Event</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Event Title"
+            type="text"
+            fullWidth
+            value={newEvent.title}
+            onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Event Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            value={newEvent.description}
+            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Event Date"
+            type="date"
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            value={newEvent.date}
+            onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Event Time"
+            type="time"
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            value={newEvent.time}
+            onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEventDialog} sx={{ color: '#8e44ad' }}>Cancel</Button>
+          <Button onClick={handleSaveEvent} sx={{ backgroundColor: '#f1c40f', color: '#000' }}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openEventDetailsDialog} onClose={handleCloseEventDetailsDialog}>
+        <DialogTitle>{selectedEvent?.title}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">Time: {selectedEvent?.time}</Typography>
+          <Typography variant="body1" sx={{ mt: 2 }}>Description: {selectedEvent?.description}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEventDetailsDialog} sx={{ color: '#8e44ad' }}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default Calendar;
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Box, 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  ListItemAvatar,
+  Avatar,
+  IconButton, 
+  TextField, 
+  Button,
+  Grid,
+  Paper
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import SendIcon from '@mui/icons-material/Send';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import CallEndIcon from '@mui/icons-material/CallEnd';
+
+const ChatRoom = () => {
+  const [channels, setChannels] = useState(['General', 'Mentors', 'Local Area']);
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [messages, setMessages] = useState({
+    General: [],
+    Mentors: [],
+    'Local Area': []
+  });
+  const [newMessage, setNewMessage] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isInVideoCall, setIsInVideoCall] = useState(false);
+  const messagesEndRef = useRef(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const [peerConnection, setPeerConnection] = useState(null);
+  const [localStream, setLocalStream] = useState(null);
+
+  // Mock data for mentors and friends
+  const contacts = [
+    { id: 1, name: 'Mentor Sarah', type: 'mentor', avatar: '/api/placeholder/40/40' },
+    { id: 2, name: 'Friend John', type: 'friend', avatar: '/api/placeholder/40/40' },
+    { id: 3, name: 'Mentor Mike', type: 'mentor', avatar: '/api/placeholder/40/40' },
+    { id: 4, name: 'Friend Emma', type: 'friend', avatar: '/api/placeholder/40/40' },
+  ];
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    if (isInVideoCall) {
+      initializeWebRTC();
+    } else {
+      cleanupWebRTC();
+    }
+  }, [isInVideoCall]);
+
+  const initializeWebRTC = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(stream);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      const pc = new RTCPeerConnection();
+      setPeerConnection(pc);
+
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.ontrack = (event) => {
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+        }
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          // Send the candidate to the remote peer
+          // You'll need to implement signaling here
+        }
+      };
+
+      // Create and send an offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // Send the offer to the remote peer
+      // You'll need to implement signaling here
+
+    } catch (error) {
+      console.error("Error initializing WebRTC:", error);
+    }
+  };
+
+  const cleanupWebRTC = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    if (peerConnection) {
+      peerConnection.close();
+    }
+    setLocalStream(null);
+    setPeerConnection(null);
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() !== '' && selectedChannel) {
+      setMessages(prevMessages => ({
+        ...prevMessages,
+        [selectedChannel]: [...prevMessages[selectedChannel], { text: newMessage, sender: 'You' }]
+      }));
+      setNewMessage('');
+    }
+  };
+
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setDrawerOpen(open);
+  };
+
+  const handleContactClick = (contact) => {
+    // For now, just navigate to the General channel
+    setSelectedChannel('General');
+  };
+
+  const startVideoCall = () => {
+    setIsInVideoCall(true);
+  };
+
+  const endVideoCall = () => {
+    setIsInVideoCall(false);
+  };
+
+  const renderLandingPage = () => (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Your Connections</Typography>
+      <Grid container spacing={2}>
+        {contacts.map((contact) => (
+          <Grid item xs={6} key={contact.id}>
+            <Paper 
+              elevation={3} 
+              sx={{ 
+                p: 2, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                cursor: 'pointer',
+                '&:hover': { backgroundColor: '#f0f0f0' }
+              }}
+              onClick={() => handleContactClick(contact)}
+            >
+              <Avatar src={contact.avatar} sx={{ width: 60, height: 60, mb: 1 }} />
+              <Typography variant="subtitle1">{contact.name}</Typography>
+              <Typography variant="body2" color="textSecondary">{contact.type}</Typography>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+      <Button 
+        fullWidth 
+        variant="contained" 
+        sx={{ mt: 2, backgroundColor: '#8e44ad', '&:hover': { backgroundColor: '#732d91' } }}
+        onClick={() => setSelectedChannel('General')}
+      >
+        Enter General Chat
+      </Button>
+    </Box>
+  );
+
+  const renderChatRoom = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
+      {isInVideoCall && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 2, backgroundColor: '#000', height: '50%' }}>
+          <video ref={localVideoRef} autoPlay muted style={{ width: '48%', height: '100%', objectFit: 'cover' }} />
+          <video ref={remoteVideoRef} autoPlay style={{ width: '48%', height: '100%', objectFit: 'cover' }} />
+        </Box>
+      )}
+      <Box sx={{ 
+        flexGrow: 1, 
+        overflow: 'auto', 
+        p: 2, 
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {messages[selectedChannel].map((msg, index) => (
+          <Box key={index} sx={{ mb: 1, p: 1, backgroundColor: '#fff', borderRadius: 1, alignSelf: msg.sender === 'You' ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>{msg.sender}</Typography>
+            <Typography variant="body1">{msg.text}</Typography>
+          </Box>
+        ))}
+        <div ref={messagesEndRef} />
+      </Box>
+
+      <Box sx={{ 
+        p: 2, 
+        backgroundColor: '#fff', 
+        borderTop: '1px solid #e0e0e0',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          sx={{ mr: 1 }}
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+        />
+        <Button 
+          variant="contained" 
+          onClick={handleSendMessage}
+          sx={{ 
+            backgroundColor: '#8e44ad', 
+            '&:hover': { backgroundColor: '#732d91' },
+            mr: 1
+          }}
+        >
+          <SendIcon />
+        </Button>
+        <Button
+          variant="contained"
+          color={isInVideoCall ? "error" : "primary"}
+          onClick={isInVideoCall ? endVideoCall : startVideoCall}
+          sx={{ minWidth: 'auto' }}
+        >
+          {isInVideoCall ? <CallEndIcon /> : <VideocamIcon />}
+        </Button>
+      </Box>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ 
+      flexGrow: 1, 
+      height: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column',
+    }}>
+      <AppBar position="static" sx={{ backgroundColor: '#f1c40f' }}>
+        <Toolbar>
+          {selectedChannel ? (
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="back"
+              sx={{ mr: 2 }}
+              onClick={() => setSelectedChannel(null)}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          ) : (
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+              onClick={toggleDrawer(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#000' }}>
+            {selectedChannel || 'Chat Home'}
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+      >
+        <Box
+          sx={{ width: 250 }}
+          role="presentation"
+          onClick={toggleDrawer(false)}
+          onKeyDown={toggleDrawer(false)}
+        >
+          <List>
+            {channels.map((channel) => (
+              <ListItem button key={channel} onClick={() => setSelectedChannel(channel)}>
+                <ListItemText primary={channel} />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+
+      {selectedChannel ? renderChatRoom() : renderLandingPage()}
+    </Box>
+  );
+};
+
+export default ChatRoom;
+import React from 'react';
+import { Container, Grid, Paper, Typography, Box, Button } from '@mui/material';
+import { Home, Restaurant, Security, Help } from '@mui/icons-material';
+
+const ContactBox = ({ title, icon, phone, email, color }) => (
+  <Paper elevation={3} sx={{ p: 3, height: '100%', backgroundColor: color, color: 'white' }}>
+    <Box display="flex" flexDirection="column" height="100%">
+      <Box display="flex" alignItems="center" mb={2}>
+        {icon}
+        <Typography variant="h5" component="h2" ml={1}>
+          {title}
+        </Typography>
+      </Box>
+      <Typography variant="body1" mb={2}>
+        Phone: {phone}
+      </Typography>
+      <Typography variant="body1" mb={2}>
+        Email: {email}
+      </Typography>
+      <Button variant="contained" color="inherit" sx={{ mt: 'auto', color: color }}>
+        Contact Now
+      </Button>
+    </Box>
+  </Paper>
+);
+
+const Contact = () => {
+  const contacts = [
+    { title: 'Housing', icon: <Home fontSize="large" />, phone: '(123) 456-7890', email: 'housing@example.com', color: '#4CAF50' },
+    { title: 'Food', icon: <Restaurant fontSize="large" />, phone: '(234) 567-8901', email: 'food@example.com', color: '#FFA000' },
+    { title: 'Assault', icon: <Security fontSize="large" />, phone: '(345) 678-9012', email: 'assault@example.com', color: '#F44336' },
+    { title: 'Other', icon: <Help fontSize="large" />, phone: '(456) 789-0123', email: 'other@example.com', color: '#2196F3' },
+  ];
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h3" component="h1" gutterBottom textAlign="center" mb={4}>
+        Contact Information
+      </Typography>
+      <Grid container spacing={4}>
+        {contacts.map((contact, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <ContactBox {...contact} />
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  );
+};
+
+export default Contact;
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Select, MenuItem, InputLabel, FormControl, Container, Typography } from '@mui/material';
+import '../styles/App.css';
+import emailjs from '@emailjs/browser';
+
+const EmergencyContact = () => {
+  const [formData, setFormData] = useState({
+    first_name: '', 
+    last_name: '', 
+    email: '',
+    phone: '',
+    message: '',
+    category: '',
+    otherCategory: '',
+  });
+
+  const form = useRef();
+
+  const [errors, setErrors] = useState({
+    phone: '',
+  });
+
+  const handleChange = (event) => {
+  const { name, value } = event.target;
+
+  // validate phone number
+  if (name === 'phone') {
+    const phoneRegex = /^\(?([0-9]{3})\)?[-.●]?([0-9]{3})[-.●]?([0-9]{4})$/; 
+    if (!phoneRegex.test(value)) {
+      setErrors((prevErrors) => ({ ...prevErrors, phone: 'Invalid phone number' }));
+    } else {
+      setErrors((prevErrors) => ({ ...prevErrors, phone: '' }));
+    }
+  }
+
+  setFormData((prevFormData) => {
+    let updatedUrgency = prevFormData.urgency;
+
+    // Update urgency based on category
+    if (name === 'category') {
+      if (value === 'unaccompanied_minor' || value === 'housing') {
+        updatedUrgency = 'URGENT';
+      } else {
+        updatedUrgency = 'moderate';
+      }
+    }
+
+    return {
+      ...prevFormData,
+      [name]: value,
+      urgency: updatedUrgency, // Set urgency accordingly
+    };
+  });
+  };
+
+
+  const sendEmail = (emailData) => {
+    console.log("%s", process.env.REACT_APP_EMAILJS_SERVICE_ID);
+    console.log("%s", process.env.REACT_APP_EMAILJS_TEMPLATE_ID);
+    emailjs
+      .send(
+        process.env.REACT_APP_EMAILJS_SERVICE_ID,
+        process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+        emailData,
+        process.env.REACT_APP_EMAILJS_PUBLIC_KEY
+      )
+      .then(
+        () => {
+          console.log('SUCCESS!');
+          alert('Email sent successfully!');
+        },
+        (error) => {
+          console.log('FAILED...', error);
+          alert('Email sending failed...');
+        }
+      );
+  };
+  
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    console.log('Current Date:', currentDate);
+    const emailData = {
+      to_name: formData.email,  
+      from_name: `${formData.first_name} ${formData.last_name}`, 
+      service_type: formData.category, 
+      urgency: formData.category === 'unaccompanied_minor' || formData.category === 'housing' ? 'URGENT' : 'moderate',
+      date: currentDate,  
+      message: formData.message,  
+    };
+
+    console.log('Form Data:', emailData);
+
+    sendEmail(emailData);
+    alert('Registration Submitted!');
+  };
+  
+  return (
+    <Container
+      maxWidth="sm"
+      className="primary-background" 
+    >
+      <Typography variant="h4" gutterBottom>
+        Emergency Contact Form
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Please fill out your emergency message and select the relevant category.
+      </Typography>
+
+      <form ref={form} onSubmit={handleSubmit}>
+        {/* First Name Input */}
+        <TextField
+          label="First Name"
+          name="first_name"
+          value={formData.first_name}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          size="small"
+        />
+
+        {/* Last Name Input */}
+        <TextField
+          label="Last Name"
+          name="last_name"
+          value={formData.last_name}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          size="small"
+        />
+
+        {/* Email Input */}
+        <TextField
+          label="Email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          size="small"
+        />
+
+        {/* Phone Number Input */}
+        <TextField
+          label="Phone Number"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          size="small"
+          error={!!errors.phone} // Show error if there's an error
+          helperText={errors.phone && errors.phone} // Display error message
+        />
+
+        {/* Message Input */}
+        <TextField
+          label="Message"
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          variant="outlined"
+          required
+          multiline
+          rows={3}
+          size="small"
+          sx={{
+            maxHeight: '100px',
+            overflow: 'auto',
+          }}
+        />
+
+        {/* Category dropdown */}
+        <FormControl fullWidth margin="normal" variant="outlined" size="small">
+          <InputLabel id="category-label">Category</InputLabel>
+          <Select
+            labelId="category-label"
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            label="Category"
+            required
+          >
+            <MenuItem value="housing">Housing</MenuItem>
+            <MenuItem value="food">Food</MenuItem>
+            <MenuItem value="unaccompanied_minor">Unaccompanied Minor</MenuItem>
+            <MenuItem value="assault">Assault</MenuItem>
+            <MenuItem value="other">Other</MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* if other selected, they can input text */}
+        {formData.category === 'other' && (
+          <TextField
+            label="Please specify"
+            name="otherCategory"
+            value={formData.otherCategory}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            required
+            size="small"
+          />
+        )}
+
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Submit
+        </Button>
+      </form>
+    </Container>
+  );
+};
+
+export default EmergencyContact;
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Typography, Container, Box } from '@mui/material';
+import EmergencyButton from '../components/EmergencyButton';
+import ApplicantTable from '../components/ApplicantTable';
+
+const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const handleQuickAccess = () => {
+    navigate('/dashboard');
+  };
+
+  return (
+    <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
+      <EmergencyButton />
+      <ApplicantTable />
+      <Typography variant="h2" component="h1" gutterBottom>
+        Welcome to Support App
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Get the support you need, when you need it.
+      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
+        <Button variant="contained" color="primary" component={Link} to="/signin">
+          Sign In
+        </Button>
+        <Button variant="outlined" color="primary" component={Link} to="/register">
+          Sign Up
+        </Button>
+      </Box>
+      <Button 
+        variant="contained" 
+        color="secondary" 
+        onClick={handleQuickAccess}
+        fullWidth
+        sx={{ mt: 2 }}
+      >
+        Quick Access to User Dashboard
+      </Button>
+    </Container>
+  );
+};
+
+export default LandingPage;
+import { useState } from 'react';
+import { cookingList } from '../data/cooking.js';
+import { financialList } from '../data/financial-literacy.js';
+import { stressList } from '../data/stress-management.js';
+import { careerList } from '../data/career-readiness.js';
+import LessonDetails from '../components/LessonDetails.js';
+import { Typography } from '@mui/material';
+
+export default function LifeSkills() {
+  const [lessonPlan, setLessonPlan] = useState('Cooking'); // Default is 'Cooking'
+
+  function handleDropdownChange(event) {
+    setLessonPlan(event.target.value);
+  }
+
+  return (
+    <div>
+      {/* Yellow bar at the top */}
+      <div className="yellowBarStyle">
+        <Typography variant="h6" component="div" style={{ margin: 0, color: '#000' }}>
+          Learning Portal
+        </Typography>
+      </div>
+
+      <h2>Select a Lesson Plan:</h2>
+      <select value={lessonPlan} onChange={handleDropdownChange} className="dropdownStyle">
+        <option value="Cooking">Cooking</option>
+        <option value="FinancialLiteracy">Financial Literacy</option>
+        <option value="StressManagement">Stress Management</option>
+        <option value="CareerReadiness">Career Readiness</option>
+      </select>
+
+      {lessonPlan === 'Cooking' && (
+        <div className="timeline">
+          {cookingList.map((lesson, idx) => (
+            <LessonDetails key={idx} lesson={lesson} />
+          ))}
+        </div>
+      )}
+
+      {lessonPlan === 'FinancialLiteracy' && (
+        <div className="timeline">
+          {financialList.map((lesson, idx) => (
+            <LessonDetails key={idx} lesson={lesson} />
+          ))}
+        </div>
+      )}
+
+      {lessonPlan === 'StressManagement' && (
+        <div className="timeline">
+          {stressList.map((lesson, idx) => (
+            <LessonDetails key={idx} lesson={lesson} />
+          ))}
+        </div>
+      )}
+
+      {lessonPlan === 'CareerReadiness' && (
+        <div className="timeline">
+          {careerList.map((lesson, idx) => (
+            <LessonDetails key={idx} lesson={lesson} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+import React, { useState } from 'react';
+import { TextField, Button, Typography, Container, Box, Grid } from '@mui/material';
+
+const MenteeApply = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    occupation: '',
+    experience: 0,
+    reason: '',
+    preferredMentorAttributes: '',
+    file: null,
+  });
+
+  const [isReasonOverLimit, setIsReasonOverLimit] = useState(false);
+  const [isMentorAttributesOverLimit, setIsMentorAttributesOverLimit] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'reason' && value.length > 300) {
+      setIsReasonOverLimit(true);
+    } else if (name === 'reason') {
+      setIsReasonOverLimit(false);
+    }
+
+    if (name === 'preferredMentorAttributes' && value.length > 300) {
+      setIsMentorAttributesOverLimit(true);
+    } else if (name === 'preferredMentorAttributes') {
+      setIsMentorAttributesOverLimit(false);
+    }
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({
+      ...formData,
+      file: e.target.files[0],
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!isReasonOverLimit && !isMentorAttributesOverLimit) {
+      console.log(formData);
+      alert('Application Submitted!');
+    } else {
+      alert('Please reduce the character count in the fields to below 300 characters.');
+    }
+  };
+
+  return (
+    <Container maxWidth="md" sx={{ marginTop: '50px' }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Mentee Application
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Please fill out the form below and upload your resume to apply as a mentee. 
+        This form helps us match you with mentors who will help you achieve your goals.
+      </Typography>
+
+      <Box component="form" onSubmit={handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Phone Number"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Occupation (if applicable)"
+              name="occupation"
+              value={formData.occupation}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Years of Experience (if applicable)"
+              name="experience"
+              value={formData.experience}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              required
+              fullWidth
+              multiline
+              rows={2}
+              label="Why do you want to be a mentee?"
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              helperText={`${formData.reason.length}/300`}
+              error={isReasonOverLimit}
+              InputProps={{
+                style: {
+                  borderColor: isReasonOverLimit ? 'red' : undefined,
+                }
+              }}
+              FormHelperTextProps={{
+                style: {
+                  color: isReasonOverLimit ? 'red' : undefined,
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="What qualities do you look for in a mentor?"
+              name="preferredMentorAttributes"
+              value={formData.preferredMentorAttributes}
+              onChange={handleChange}
+              helperText={`${formData.preferredMentorAttributes.length}/300`}
+              error={isMentorAttributesOverLimit}
+              InputProps={{
+                style: {
+                  borderColor: isMentorAttributesOverLimit ? 'red' : undefined,
+                }
+              }}
+              FormHelperTextProps={{
+                style: {
+                  color: isMentorAttributesOverLimit ? 'red' : undefined,
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              component="label"
+              fullWidth
+            >
+              Upload Resume
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+              />
+            </Button>
+            {formData.file && (
+              <Typography variant="body2" sx={{ marginTop: '10px' }}>
+                Uploaded File: {formData.file.name}
+              </Typography>
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={isReasonOverLimit || isMentorAttributesOverLimit}
+            >
+              Submit Application
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
+  );
+};
+
+export default MenteeApply;
+import React, { useState } from 'react';
+import { TextField, Button, Typography, Container, Box, Grid } from '@mui/material';
+
+const MentorApply = () => {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    occupation: '',
+    experience: 0,
+    reason: '',
+    preferredMenteeAttributes: '',
+    file: null,
+  });
+
+  const [isReasonOverLimit, setIsReasonOverLimit] = useState(false);
+  const [isMenteeAttributesOverLimit, setIsMenteeAttributesOverLimit] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'reason' && value.length > 300) {
+      setIsReasonOverLimit(true);
+    } else if (name === 'reason') {
+      setIsReasonOverLimit(false);
+    }
+
+    if (name === 'preferredMenteeAttributes' && value.length > 300) {
+      setIsMenteeAttributesOverLimit(true);
+    } else if (name === 'preferredMenteeAttributes') {
+      setIsMenteeAttributesOverLimit(false);
+    }
+
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({
+      ...formData,
+      file: e.target.files[0],
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!isReasonOverLimit && !isMenteeAttributesOverLimit) {
+      console.log(formData);
+      alert('Application Submitted!');
+    } else {
+      alert('Please reduce the character count in the fields to below 300 characters.');
+    }
+  };
+
+  return (
+    <Container maxWidth="md" sx={{ marginTop: '50px' }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Mentor Application
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Please fill out the form below and upload your resume to apply as a mentor. 
+        This form helps us match you with mentees who will benefit the most from your expertise.
+      </Typography>
+
+      <Box component="form" onSubmit={handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Phone Number"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Occupation"
+              name="occupation"
+              value={formData.occupation}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              label="Years of Experience"
+              name="experience"
+              value={formData.experience}
+              onChange={handleChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              required
+              fullWidth
+              multiline
+              rows={2}
+              label="Why do you want to be a mentor?"
+              name="reason"
+              value={formData.reason}
+              onChange={handleChange}
+              helperText={`${formData.reason.length}/300`}
+              error={isReasonOverLimit}
+              InputProps={{
+                style: {
+                  borderColor: isReasonOverLimit ? 'red' : undefined,
+                }
+              }}
+              FormHelperTextProps={{
+                style: {
+                  color: isReasonOverLimit ? 'red' : undefined,
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="What qualities do you look for in a mentee?"
+              name="preferredMenteeAttributes"
+              value={formData.preferredMenteeAttributes}
+              onChange={handleChange}
+              helperText={`${formData.preferredMenteeAttributes.length}/300`}
+              error={isMenteeAttributesOverLimit}
+              InputProps={{
+                style: {
+                  borderColor: isMenteeAttributesOverLimit ? 'red' : undefined,
+                }
+              }}
+              FormHelperTextProps={{
+                style: {
+                  color: isMenteeAttributesOverLimit ? 'red' : undefined,
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              component="label"
+              fullWidth
+            >
+              Upload Resume
+              <input
+                type="file"
+                hidden
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+              />
+            </Button>
+            {formData.file && (
+              <Typography variant="body2" sx={{ marginTop: '10px' }}>
+                Uploaded File: {formData.file.name}
+              </Typography>
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={isReasonOverLimit || isMenteeAttributesOverLimit}
+            >
+              Submit Application
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
+  );
+};
+
+export default MentorApply;
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Container, Typography, Box } from '@mui/material';
+import '../styles/App.css';
+
+const Register = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match!');
+      return;
+    }
+
+    const data = {
+      name: formData.username, // Using username as name for now
+      username: formData.username,
+      password: formData.password,
+      user_type: 2 // Assuming 2 is for regular users/mentees
+    };
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/signup', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Signup failed. Please try again.');
+      }
+
+      const result = await response.json();
+      console.log('Success:', result);
+      alert('Signup successful!');
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error:', error);
+      setError(error.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Register
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="Username"
+            name="username"
+            autoComplete="username"
+            autoFocus
+            value={formData.username}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="new-password"
+            value={formData.password}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="confirmPassword"
+            label="Confirm Password"
+            type="password"
+            id="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+          />
+          {error && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {error}
+            </Typography>
+          )}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Signing up...' : 'Register'}
+          </Button>
+        </Box>
+      </Box>
+    </Container>
+  );
+};
+
+export default Register;
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/App.css';
+
+const Logon = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
+
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch('http://localhost:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Login Successful!');
+        // Redirect to UserLandingPage
+        navigate('/dashboard');
+      } else {
+        alert(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
+  return (
+    <div style={{ 
+      maxWidth: '800px', 
+      margin: '50px auto', // Center the form and push it down
+      padding: '20px', 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center' // Center items within the container
+    }}>
+      <h2 style={{ fontSize: '26px' }}>Log in</h2>
+      <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <div style={{ marginBottom: '20px', width: '100%' }}>
+          <label style={{ fontSize: '26px' }}>Username:</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+            style={{ 
+              width: '100%', // Full width
+              padding: '12px', 
+              fontSize: '18px', // Increased font size
+              marginTop: '5px' 
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: '20px', width: '100%' }}>
+          <label style={{ fontSize: '26px' }}>Password:</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            style={{ 
+              width: '100%', // Full width
+              padding: '12px', 
+              fontSize: '18px', // Increased font size
+              marginTop: '5px' 
+            }}
+          />
+        </div>
+        <button type="submit" style={{ padding: '12px', width: '100%', fontSize: '18px' }}>
+          Log In
+        </button>
+        
+        {/* Forgot Password Link */}
+        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+          <a 
+            href="/forgotpassword" 
+            style={{ 
+              fontSize: '16px', 
+              color: 'blue', 
+              textDecoration: 'none', 
+              cursor: 'pointer' 
+            }}
+          >
+            Forgot password?
+          </a>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default Logon;
+import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { 
+  Container, 
+  Grid, 
+  Paper, 
+  Typography, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  ListItemIcon,
+  IconButton,
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
+} from '@mui/material';
+import { 
+  Event as EventIcon, 
+  Phone as PhoneIcon, 
+  Email as EmailIcon,
+  Edit as EditIcon,
+  Settings as SettingsIcon // Import Settings Icon
+} from '@mui/icons-material';
+
+const UserLandingPage = () => {
+  const navigate = useNavigate();
+  const [mentorName, setMentorName] = useState("Sarah Johnson");
+  const [totalPoints, setTotalPoints] = useState(300);
+  const [displayedPoints, setDisplayedPoints] = useState(0); // For animation
+  const [events, setEvents] = useState([
+    { date: "2024-10-18", title: "Meeting with Mentor" },
+    { date: "2024-10-20", title: "Community Volunteering" },
+    { date: "2024-10-25", title: "Career Workshop" },
+  ]);
+  const [quickContacts, setQuickContacts] = useState([
+    { name: "Emergency Hotline", contact: "911" },
+    { name: "Mentor", contact: "mentor@example.com" },
+    { name: "Support Group", contact: "1-800-SUPPORT" },
+  ]);
+
+  // Profile Settings Dialog State
+  const [openProfileSettingsDialog, setOpenProfileSettingsDialog] = useState(false);
+  const [email, setEmail] = useState("mentor@example.com");
+  const [location, setLocation] = useState("New York");
+
+  // Edit Contacts Dialog State
+  const [openEditContactsDialog, setOpenEditContactsDialog] = useState(false);
+  const [editedContacts, setEditedContacts] = useState(quickContacts);
+
+  const handleOpenProfileSettingsDialog = () => {
+    setOpenProfileSettingsDialog(true);
+  };
+
+  const handleCloseProfileSettingsDialog = () => {
+    setOpenProfileSettingsDialog(false);
+    // Reset the form fields if needed
+  };
+
+  const handleSaveProfileSettings = () => {
+    // Save the email and location to the user data here
+    handleCloseProfileSettingsDialog();
+  };
+
+  const handleEditContacts = () => {
+    setOpenEditContactsDialog(true);
+  };
+
+  const handleCloseEditContactsDialog = () => {
+    setOpenEditContactsDialog(false);
+  };
+
+  const handleSaveEditedContacts = () => {
+    setQuickContacts(editedContacts);
+    handleCloseEditContactsDialog();
+  };
+
+  const handleContactChange = (index, field, value) => {
+    const updatedContacts = [...editedContacts];
+    updatedContacts[index][field] = value;
+    setEditedContacts(updatedContacts);
+  };
+
+  // Animate the points value
+  useEffect(() => {
+    let start = 0;
+    const end = totalPoints;
+    if (start === end) return;
+
+    let incrementTime = 10; // in ms, change this to adjust speed
+    const step = Math.ceil(end / 100);
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        start = end;
+        clearInterval(timer);
+      }
+      setDisplayedPoints(start);
+    }, incrementTime);
+
+    return () => clearInterval(timer);
+  }, [totalPoints]);
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
+          <SettingsIcon /> {/* Settings Icon for Profile */}
+        </IconButton>
+      </Box>
+      <Grid container spacing={3}>
+        {/* Dashboard */}
+        <Grid item xs={12} md={6} lg={4}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              height: 240,
+            }}
+          >
+            <Typography component="h2" variant="h6" color="primary" gutterBottom>
+              My Dashboard
+            </Typography>
+            <Typography component="p" variant="h4">
+              Welcome back!
+            </Typography>
+            <Typography color="text.secondary" sx={{ flex: 1 }}>
+              Your Mentor: {mentorName}
+            </Typography>
+            <Typography component="p" variant="h4">
+              Total Points: {displayedPoints}
+            </Typography>
+          </Paper>
+        </Grid>
+        
+        {/* Events */}
+        <Grid item xs={12} md={6} lg={8}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              height: 240,
+            }}
+          >
+            <Typography component="h2" variant="h6" color="primary" gutterBottom>
+              Upcoming Events
+            </Typography>
+            <List sx={{ overflow: 'auto' }}>
+              {events.map((event, index) => (
+                <ListItem key={index}>
+                  <ListItemIcon>
+                    <EventIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={event.title} 
+                    secondary={new Date(event.date).toLocaleDateString()} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Grid>
+        
+        {/* Quick Contacts */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography component="h2" variant="h6" color="primary" gutterBottom>
+                Quick Contacts
+              </Typography>
+              <IconButton onClick={handleEditContacts} size="small">
+                <EditIcon />
+              </IconButton>
+            </Box>
+            <Grid container spacing={2}>
+              {quickContacts.map((contact, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Paper elevation={3} sx={{ p: 2 }}>
+                    <Typography variant="h6">{contact.name}</Typography>
+                    <Box display="flex" alignItems="center">
+                      {contact.contact.includes('@') ? (
+                        <EmailIcon sx={{ mr: 1 }} />
+                      ) : (
+                        <PhoneIcon sx={{ mr: 1 }} />
+                      )}
+                      <Typography>{contact.contact}</Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+            <Box display="flex" justifyContent="center" mt={2}>
+              <Button variant="contained" color="primary" sx={{ mr: 2 }} onClick={() => navigate('/mentorapply')}>
+                Apply to be a Mentor
+              </Button>
+              <Button variant="contained" color="secondary" onClick={() => navigate('/menteeapply')}>
+                Be a Mentee
+              </Button>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Profile Settings Dialog */}
+      <Dialog open={openProfileSettingsDialog} onClose={handleCloseProfileSettingsDialog}>
+        <DialogTitle>Edit Profile Settings</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Email"
+            type="email"
+            fullWidth
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Location"
+            type="text"
+            fullWidth
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+          {/* Add more fields as necessary */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProfileSettingsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleSaveProfileSettings} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Contacts Dialog */}
+      <Dialog open={openEditContactsDialog} onClose={handleCloseEditContactsDialog}>
+        <DialogTitle>Edit Quick Contacts</DialogTitle>
+        <DialogContent>
+          {editedContacts.map((contact, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
+              <TextField
+                margin="dense"
+                label="Contact Name"
+                type="text"
+                fullWidth
+                value={contact.name}
+                onChange={(e) => handleContactChange(index, 'name', e.target.value)}
+              />
+              <TextField
+                margin="dense"
+                label="Contact Info"
+                type="text"
+                fullWidth
+                value={contact.contact}
+                onChange={(e) => handleContactChange(index, 'contact', e.target.value)}
+              />
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditContactsDialog} color="primary">Cancel</Button>
+          <Button onClick={handleSaveEditedContacts} color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default UserLandingPage;
+export const validateEmail = (email) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
+};
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import SignIn from './pages/SignIn';
+import Register from './pages/Register';
+import ChatRoom from './pages/ChatRoom';
+import UserLandingPage from './pages/UserLandingPage'
+import EmergencyContact from './pages/EmergencyContact';
+import LifeSkills from './pages/LifeSkills';
+import Calendar from './pages/Calendar';
+import Contact from './pages/Contact';
+import Navbar from './components/Navbar';
+import PopupChat from './components/PopupChat'; // Import the new PopupChat component
+import './styles/App.css';
+
+function App() {
+  const [chatMessages, setChatMessages] = useState([]);
+
+  const handleSendMessage = (message) => {
+    setChatMessages([...chatMessages, { text: message, sender: 'You' }]);
+    // Here you would typically send the message to a server
+    // For now, we'll just simulate a response
+    setTimeout(() => {
+      setChatMessages(prevMessages => [...prevMessages, { text: 'This is a response', sender: 'Bot' }]);
+    }, 1000);
+  };
+
+  return (
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/chat" element={<ChatRoom />} />
+          <Route path="/emergency" element={<EmergencyContact />} />
+          <Route path="/lifeskills" element={<LifeSkills />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/dashboard" element={<UserLandingPage />} />
+        </Routes>
+        <Navbar />
+        <PopupChat messages={chatMessages} onSendMessage={handleSendMessage} />
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+export const validateEmail = (email) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
