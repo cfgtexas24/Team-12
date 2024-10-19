@@ -26,13 +26,11 @@ const Calendar = ({ userRole }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEvent, setNewEvent] = useState({ title: '', description: '', date: '', time: '' });
 
-  const isAdminOrMentor = userRole === 'admin' || userRole === 'mentor';
-
   // Sample events
   useEffect(() => {
     const sampleEvents = {
       '2024-10-20': [
-        { title: 'Team Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
+        { title: 'Mentor Meeting', time: '10:00 AM', color: '#4285F4', description: 'Discuss project progress' },
         { title: 'Lunch with Sarah', time: '12:30 PM', color: '#0F9D58', description: 'At the new Italian restaurant' }
       ],
       '2024-10-21': [
@@ -74,9 +72,7 @@ const Calendar = ({ userRole }) => {
   };
 
   const handleAddEvent = () => {
-    if (isAdminOrMentor) {
-      setOpenEventDialog(true);
-    }
+    setOpenEventDialog(true);
   };
 
   const handleCloseEventDialog = () => {
@@ -195,20 +191,18 @@ const Calendar = ({ userRole }) => {
           <IconButton onClick={handleNextWeek} sx={{ color: '#8e44ad' }}>
             <ChevronRight />
           </IconButton>
-          {isAdminOrMentor && (
-            <Button
-              startIcon={<AddIcon />}
-              onClick={handleAddEvent}
-              sx={{ 
-                ml: 2, 
-                backgroundColor: '#f1c40f', 
-                color: '#000',
-                '&:hover': { backgroundColor: '#f39c12' }
-              }}
-            >
-              Add Event
-            </Button>
-          )}
+          <Button
+            startIcon={<AddIcon />}
+            onClick={handleAddEvent}
+            sx={{ 
+              ml: 2, 
+              backgroundColor: '#f1c40f', 
+              color: '#000',
+              '&:hover': { backgroundColor: '#f39c12' }
+            }}
+          >
+            Add Event
+          </Button>
         </Box>
       </Box>
 
@@ -219,7 +213,7 @@ const Calendar = ({ userRole }) => {
               {date.toLocaleDateString('default', { weekday: 'short' })}
             </Typography>
             <Typography variant="body2" align="center">
-              {date.getDate()}
+            {date.getDate()}
             </Typography>
           </Grid>
         ))}

@@ -1,9 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button, Typography, Container } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button, Typography, Container, Box } from '@mui/material';
 import EmergencyButton from '../components/EmergencyButton';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const handleQuickAccess = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <Container maxWidth="sm" sx={{ marginTop: '80px' }}>
       <EmergencyButton />
@@ -13,11 +19,22 @@ const LandingPage = () => {
       <Typography variant="body1" paragraph>
         Get the support you need, when you need it.
       </Typography>
-      <Button variant="contained" color="primary" component={Link} to="/signin">
-        Sign In
-      </Button>
-      <Button variant="outlined" color="primary" component={Link} to="/register" sx={{ marginLeft: '10px' }}>
-        Sign Up
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 2 }}>
+        <Button variant="contained" color="primary" component={Link} to="/signin">
+          Sign In
+        </Button>
+        <Button variant="outlined" color="primary" component={Link} to="/register">
+          Sign Up
+        </Button>
+      </Box>
+      <Button 
+        variant="contained" 
+        color="secondary" 
+        onClick={handleQuickAccess}
+        fullWidth
+        sx={{ mt: 2 }}
+      >
+        Quick Access to User Dashboard
       </Button>
     </Container>
   );

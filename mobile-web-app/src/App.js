@@ -8,6 +8,7 @@ import EmergencyContact from './pages/EmergencyContact';
 import LifeSkills from './pages/LifeSkills';
 import Calendar from './pages/Calendar';
 import Contact from './pages/Contact';
+import UserLandingPage from './pages/UserLandingPage';
 import Navbar from './components/Navbar';
 import './styles/App.css';
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="/lifeskills" element={<LifeSkills />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/dashboard" element={<UserLandingPage />} />
         </Routes>
         <Navbar />
       </div>
