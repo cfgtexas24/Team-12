@@ -139,20 +139,19 @@ const UserLandingPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 15, mb: 4 }}>
       {/* Emergency Button at the top */}
       <EmergencyButton />
 
       {/* Static Logo in the top left */}
       <Box sx={{ position: 'absolute', top: '80px', left: '16px' }}>
         <img 
-          src={logo} 
-          alt="Support App Logo" 
+          src={logo}
           style={{ width: '80px', height: '40px', cursor: 'pointer' }} 
           onClick={() => navigate('/')}
         />
       </Box>
-      <Box display="flex" justifyContent="flex-end" mb={2}>
+      <Box sx={{ position: 'absolute', top: '80px', right: '16px' }}>
         <IconButton onClick={handleOpenProfileSettingsDialog} size="small">
           <SettingsIcon />
         </IconButton>
